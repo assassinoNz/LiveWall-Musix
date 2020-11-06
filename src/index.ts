@@ -6,6 +6,7 @@ import * as express from "express";
 import * as socketIo from "socket.io";
 
 import { musixRouter } from "./routers/MusixRouter";
+import { liveWallRouter } from "./routers/LiveWallRouter";
 
 /*
 =====================================================================================
@@ -23,6 +24,7 @@ app: Router Setup
 =====================================================================================
 */
 app.use("/musix", musixRouter);
+app.use("/liveWall", liveWallRouter);
 /* 
 =====================================================================================
 io: Listeners Setup

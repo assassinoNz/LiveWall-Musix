@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en-us" style="height: 100%; width: 100%">
+
+<head>
+    <title id="title">LiveWall&trade;</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="/liveWall/manifests/liveWall.webmanifest" rel="manifest" />
+    <link href="/liveWall/stylesheets/liveWall/index.css" rel="stylesheet" />
+</head>
+
+<script type="module">
+    //@ts-check
+    import { Utility } from "/liveWall/scripts/liveWall/Utility.js";
+    import { CarouselController } from "/liveWall/scripts/liveWall/CarouselController.js";
+    import { LiveWallController } from "/liveWall/scripts/liveWall/LiveWallController.js";
+    import { DirectoryExplorerController } from "/liveWall/scripts/liveWall/DirectoryExplorerController.js";
+
+    //Prevent contextMenu
+    window.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+    });
+    //Add onload to window for initializing cardInterface
+    window.addEventListener("load", () => {
+        window.cardInterface = new CardInterface();
+    });
+
+    class CardInterface {
+        cardObject = null;
+        title = document.querySelector("title").textContent;
+        carouselController = new CarouselController(this, document.getElementById("carouselViewport"));
+        liveWallController = new LiveWallController(this, document.getElementById("liveWallViewport"));
+        directoryExplorerController = new DirectoryExplorerController(this, document.getElementById("directoryExplorer"));
+        rootDirectoryPath = "";
+        imageMetadata = [{ path: "", hwRatio: 1 }];
+        activeViewportIndex = 1;
+        selectedCardDivisionSectorItems = [];
+
+        viewportContainer = document.getElementById("viewportContainer");
+        navigationControl = document.getElementById("navigationControl");
+        templateContainerFragment = document.getElementById("templateContainer").content;
+        createControls = document.querySelectorAll("#createControlsContainer > button");
+        retrieveControls = document.querySelectorAll("#retrieveControlsContainer > button");
+        updateControls = document.querySelectorAll("#updateControlsContainer > button");
+        deleteControls = document.querySelectorAll("#deleteControlsContainer > button");
+
+        constructor() {
+            //Add onclick to searchButton for toggling search UI
+            this.updateControls[0].addEventListener("click", () => {
+                Utility.toggleButtonGlyph(this.updateControls[0]);
+            });
+            //Add onkeypress to searchButtonInput for searching the card
+            this.updateControls[0].children[1].addEventListener("keypress", (event) => {
+                if (event.key === "Enter") {
+                    Utility.toggleButtonGlyph(this.updateControls[0]);
+                    if (event.currentTarget.value !== "") {
+                        this.setRootDirectoryPath(event.target.value);
+                    } 
+                }
+            });
+
+            this.retrieveControls[0].addEventListener("click", (event) => {
+                this.carouselController.scrollCarouselImage("previous");
+            });
+            this.retrieveControls[1].addEventListener("click", (event) => {
+                this.switchViewport();
+            });
+            this.retrieveControls[2].addEventListener("click", (event) => {
+                this.carouselController.scrollCarouselImage("next");
+            });
+
+            //Add onclick to navigationControl for switching next viewport
+            this.navigationControl.addEventListener("click", () => {
+                this.switchViewport(null);
+            });
+            this.navigationControl.addEventListener("touchstart", (event) => {
+                this.startNavigation(event);
+            });
+            this.navigationControl.addEventListener("mousedown", (event) => {
+                this.startNavigation(event);
+            });
+
+            //NOTE: This must be done only on secure contexts. navigator.serviceWorker isn't available on insecure contexts
+            if (window.isSecureContext) {
+                navigator.serviceWorker.register("../../liveWall.serviceWorker.js", { scope: "/liveWall" });
+            }
+
+            this.switchViewport(0);
+
+            if (!window.frameElement && navigator.userAgent.includes("Android")) {
+                this.setRootDirectoryPath("/storage/3ACD-101B/" + prompt("Specify a path inside '/storage/3ACD-101B/'"));
+            } else if (!window.frameElement) {
+                this.setRootDirectoryPath(prompt("Specify an absolute path with image directories"));
+            }
+        }
+
+        setRootDirectoryPath(rootDirectoryPath) {
+            //NOTE: Directory paths must end with a "/"
+            if (rootDirectoryPath.endsWith("/")) {
+                this.rootDirectoryPath = rootDirectoryPath;
+            } else {
+                this.rootDirectoryPath = rootDirectoryPath + "/";
+            }
+            //Merge rootDirectoryPath with the static/public directory
+            fetch(`/liveWall/directories/${encodeURIComponent(this.rootDirectoryPath)}`, {
+                method: "PUT"
+            }).then(response => response.json()).then(response => {
+                if (response.status) {
+                    //Populate directoryViewport with root directory's directory data (ie. specify empty subdirectoryPath)
+                    this.directoryExplorerController.exploreDirectory("/");
+                } else {
+                    if (window.frameElement) {
+                        window.parent.shellInterface.throwAlert(response.error.title, response.error.titleDescription, response.error.message, null, "OK", null);
+                    } else {
+                        alert(response.error.title);
+                    }
+                }
+            });
+        }
+
+        getRootDirectoryPath() {
+            return this.rootDirectoryPath;
+        }
+
+        getLiveWallController() {
+            return this.liveWallController;
+        }
+
+        getCarouselController() {
+            return this.carouselController;
+        }
+
+        getTemplate(cssQuery) {
+            return this.templateContainerFragment.querySelector(cssQuery);
+        }
+
+        setImageMetadata(imageMetadata) {
+            return this.imageMetadata = imageMetadata;
+        }
+
+        getImageMetadata() {
+            return this.imageMetadata;
+        }
+
+        addZoomImage(zoomImage) {
+            this.viewportContainer.appendChild(zoomImage.getView());
+        }
+
+        switchViewport(viewportIndex = null) {
+            //NOTE: ViewportContainer may contain zoomImages
+            //Switch to next viewport if the viewportIndex is not specified
+            const viewports = this.viewportContainer.querySelectorAll(".viewport");
+            if (viewportIndex === null) {
+                if (this.activeViewportIndex === viewports.length - 1) {
+                    viewportIndex = 0;
+                } else {
+                    viewportIndex = this.activeViewportIndex + 1;
+                }
+            }
+            //NOTE: Since setIntervals are resource intensive, they must be cleared when not needed
+            if (viewports[this.activeViewportIndex].id === "liveWallViewport") {
+                this.liveWallController.freezeWall();
+            } else if (viewports[viewportIndex].id === "liveWallViewport") {
+                this.liveWallController.animateWall();
+            }
+            //Animate out activeViewport
+            viewports[this.activeViewportIndex].classList.replace("popIn", "popOut");
+            //Animate in viewport
+            viewports[viewportIndex].classList.replace("popOut", "popIn");
+
+            this.activeViewportIndex = viewportIndex;
+        }
+
+        //EVENT HANDLER METHODS
+        startNavigation(event) {
+            const cardInterface = this;
+
+            const originalMousePositionX = (event.screenX || event.touches[0].screenX);
+            const originalMousePositionY = (event.screenY || event.touches[0].screenY);
+
+            window.addEventListener("touchmove", determineProcedure);
+            window.addEventListener("mousemove", determineProcedure);
+            window.addEventListener("touchend", executeProcedure);
+            window.addEventListener("mouseup", executeProcedure);
+
+            let differenceX = 0;
+            let differenceY = 0;
+            let procedureToExecute = () => { };
+
+            //INNER EVENT HANDLER FUNCTIONS
+            function determineProcedure(event) {
+                //Calculate the travelledDistance of the mouse as a vector
+                differenceX = (event.screenX || event.touches[0].screenX) - originalMousePositionX;
+                differenceY = (event.screenY || event.touches[0].screenY) - originalMousePositionY;
+
+                const absoluteDifferenceX = Math.abs(differenceX);
+                const absoluteDifferenceY = Math.abs(differenceY);
+                if (absoluteDifferenceX >= absoluteDifferenceY) {
+                    //CASE: x axis must be prioritized
+                    if (differenceX > 0) {
+                        cardInterface.navigationControl.style.borderWidth = "0 2px 0 0";
+                        procedureToExecute = () => {
+                            cardInterface.carouselController.scrollCarouselImage("next");
+                        };
+                    } else if (differenceX < 0) {
+                        cardInterface.navigationControl.style.borderWidth = "0 0 0 2px";
+                        procedureToExecute = () => {
+                            cardInterface.carouselController.scrollCarouselImage("previous");
+                        };
+                    }
+                } else {
+                    //CASE: y axis must be prioritized
+                    if (differenceY > 0) {
+                        cardInterface.navigationControl.style.borderWidth = "0 0 2px 0";
+                        procedureToExecute = () => {
+                            //Close all zoomImages
+                            const zoomImageCloseButtons = document.querySelectorAll(".zoomImage button");
+                            for (let i = 0; i < zoomImageCloseButtons.length; i++) {
+                                zoomImageCloseButtons[i].click();
+                            }
+                        }
+                    } else if (differenceY < 0) {
+                        cardInterface.navigationControl.style.borderWidth = "2px 0 0 0";
+                        procedureToExecute = () => {
+                            const panelContainer = document.getElementById("panelContainer");
+                            if (panelContainer.classList.contains("popIn")) {
+                                panelContainer.classList.replace("popIn", "popOut");
+                            } else {
+                                panelContainer.classList.replace("popOut", "popIn");
+                            }
+                        };
+                    }
+                }
+            }
+
+            function executeProcedure() {
+                procedureToExecute();
+                //Remove translation
+                cardInterface.navigationControl.removeAttribute("style");
+                //Remove all previously added eventListeners
+                window.removeEventListener("touchmove", determineProcedure);
+                window.removeEventListener("mousemove", determineProcedure);
+                window.removeEventListener("touchend", executeProcedure);
+                window.removeEventListener("mouseup", executeProcedure);
+            }
+        }
+    }
+</script>
+
+<body>
+    <div id="viewportContainer">
+        <div id="carouselViewport" class="viewport popOut">
+            <img id="carouselImageNew" class="carouselImage" />
+            <img id="carouselImageCurrent" class="carouselImage" />
+        </div>
+
+        <div id="liveWallViewport" class="viewport popOut">
+            <div id="areasContainer">
+                <img id="square1" class="square" style="grid-area: s1; background-color:chocolate;" />
+                <img id="square2" class="square" style="grid-area: s2; background-color:orange;" />
+                <img id="square3" class="square" style="grid-area: s3; background-color:yellow;" />
+
+                <img id="landscape1" class="landscape" style="grid-area: l1; background-color:limegreen;" />
+                <img id="landscape2" class="landscape" style="grid-area: l2; background-color:mediumslateblue;" />
+                <img id="landscape3" class="landscape" style="grid-area: l3; background-color:indianred;" />
+
+                <img id="portrait1" class="portrait" style="grid-area: p1; background-color:violet;" />
+                <img id="portrait2" class="portrait" style="grid-area: p2; background-color:rosybrown;" />
+                <img id="portrait3" class="portrait" style="grid-area: p3; background-color:deepskyblue;" />
+                <img id="portrait4" class="portrait" style="grid-area: p4; background-color:turquoise;" />
+                <img id="portrait5" class="portrait" style="grid-area: p5; background-color:hotpink;" />
+                <img id="portrait6" class="portrait" style="grid-area: p6; background-color:yellowgreen;" />
+            </div>
+        </div>
+
+        <!-- <div id="tileViewport" class="viewport popOut">
+        </div> -->
+    </div>
+
+    <div id="panelContainer" class="popIn">
+        <div id="directoryExplorer" class="panel">
+            <div class="panelDivision">
+
+            </div>
+            <div class="buttonContainer">
+                <button class="button">BACK</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="navigationControl"></button>
+</body>
+
+<!-- quickAccessArea -->
+<div id="quickAccessArea" style="display: none;">
+    <div id="createControlsContainer">
+
+    </div>
+    <div id="retrieveControlsContainer">
+        <button class="buttonGlyph" title="Previous image">
+            <img src="/images/liveWall/glyph_previousImage.png" />
+        </button>
+        <button class="buttonGlyph" title="Switch viewport">
+            <img src="/images/liveWall/glyph_switchViewport.png" />
+        </button>
+        <button class="buttonGlyph" title="Next image">
+            <img src="/images/liveWall/glyph_nextImage.png" />
+        </button>
+    </div>
+    <div id="updateControlsContainer">
+        <button class="buttonGlyph" title="Change root directory">
+            <img src="/images/liveWall/glyph_changeDirectory.png" />
+            <input type="text" placeholder="TYPE AN ABSOLUTE PATH"
+                style="display:none; height: 100%; width: 100%; text-align: center; background-color: transparent; border: none;"
+                value="/media/assassino/Pictures" />
+        </button>
+    </div>
+    <div id="deleteControlsContainer">
+
+    </div>
+</div>
+
+<template id="templateContainer">
+    <div class="zoomImage">
+        <div class="buttonContainer">
+            <button class="button" style="border-top-right-radius: 10px;">CLOSE</button>
+        </div>
+    </div>
+
+    <div class="panelDivisionSector" data-subdirectory-path="">
+        Directory Name
+    </div>
+</template>
+
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Playlist Editor</title>
+
+    <link rel="stylesheet" href="/stylesheets/musix/playlistEditor.css">
+
+    <script>
+        //@ts-check
+        function main() {
+            fetch("/musix/playlists")
+                .then(response => response.json())
+                .then(response => {
+                    let trackViewIdCounter = 0;
+
+                    const playlistViewsContainer = new DocumentFragment();
+
+                    for (const playlist of response.data) {
+                        const playlistView = document.createElement("div");
+                        playlistView.setAttribute("class", "playlistView");
+                        playlistView.dataset.name = playlist.name;
+                        playlistView.dataset.themeColor = playlist.themeColor;
+                        playlistView.style.backgroundColor = playlist.themeColor;
+
+                        const playlistNameInput = document.createElement("input");
+                        playlistNameInput.type = "text";
+                        playlistNameInput.placeholder = "Playlist Name";
+                        playlistNameInput.value = playlist.name;
+                        playlistNameInput.setAttribute("class", "playlistNameInput");
+                        playlistNameInput.addEventListener("keyup", () => {
+                            playlistView.dataset.name = playlistNameInput.value;
+                        });
+                        playlistView.appendChild(playlistNameInput);
+
+                        const playlistColorInput = document.createElement("input");
+                        playlistColorInput.type = "text";
+                        playlistColorInput.placeholder = "Theme Color";
+                        playlistColorInput.value = playlist.themeColor;
+                        playlistColorInput.setAttribute("class", "playlistColorInput");
+                        playlistColorInput.addEventListener("keyup", () => {
+                            playlistView.dataset.themeColor = playlistColorInput.value;
+                            playlistView.style.backgroundColor = playlistColorInput.value;
+                        });
+                        playlistView.appendChild(playlistColorInput);
+
+                        for (const track of playlist.tracks) {
+                            const trackView = document.createElement("div");
+                            trackView.id = (trackViewIdCounter++).toString();
+                            trackView.draggable = true;
+                            trackView.setAttribute("class", "trackView");
+                            if (track.title) {
+                                trackView.textContent = track.title;
+                            } else {
+                                trackView.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."));
+                            }
+
+                            trackView.addEventListener("click", (event) => {
+                                document.getElementsByTagName("audio")[0].src = `/musix/${track.path}`;
+                            });
+                            trackView.addEventListener("dragover", (event) => {
+                                event.preventDefault();
+                            });
+                            trackView.addEventListener("drop", (event) => {
+                                trackView.parentElement.insertBefore(document.getElementById(event.dataTransfer.getData("elementId")), trackView);
+                            });
+                            trackView.addEventListener("dragstart", (event) => {
+                                event.dataTransfer.setData("elementId", trackView.id);
+                            });
+
+                            trackView.dataset.trackObject = JSON.stringify(track);
+
+                            playlistView.appendChild(trackView);
+                        }
+                        playlistViewsContainer.appendChild(playlistView);
+                    }
+
+                    document.getElementById("playlistViewContainer").appendChild(playlistViewsContainer);
+                });
+        }
+
+        function updatePlaylistDatabase() {
+            if (confirm("This operation cannot be undone. Still wanna submit?")) {
+                const playlists = [];
+
+                const playlistViews = Array.from(document.querySelectorAll(".playlistView"));
+                for (const playlistView of playlistViews) {
+                    const playlist = {
+                        name: playlistView.dataset.name,
+                        themeColor: playlistView.dataset.themeColor,
+                        tracks: []
+                    };
+
+                    const trackViews = Array.from(playlistView.querySelectorAll(".trackView"));
+                    for (const trackView of trackViews) {
+                        const track = JSON.parse(trackView.dataset.trackObject);
+                        playlist.tracks.push(track);
+                    }
+
+                    playlists.push(playlist);
+                }
+
+                fetch("/musix/playlists", {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        playlists: playlists
+                    })
+                })
+                    .then(response => response.json())
+                    .then(response => {
+                        alert("Submission successful");
+                    });
+            }
+        }
+    </script>
+</head>
+
+<body onload="main();">
+    <div id="playlistViewContainer"></div>
+    <span id="controlsContainer">
+        <button id="submitButton" onclick="updatePlaylistDatabase();">SUBMIT</button>
+        <audio src="" controls="controls" autoplay="autoplay"></audio>
+    </span>
+</body>
+
+</html>

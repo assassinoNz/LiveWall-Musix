@@ -1,0 +1,386 @@
+* {
+    /* border: thin solid red !important; */
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    font-family: "Ubuntu";
+    font-size: 16px;
+    font-weight: bolder;
+    color: white;
+    cursor: default;
+    user-select: none;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+    width: 100%;
+
+    background-color: black;
+}
+
+#viewportContainer {
+    position: absolute;
+
+    height: 100%;
+    width: 100%;
+
+    z-index: 1;
+}
+
+@keyframes popInViewport {
+    0% {
+        transform: translateY(100vh) scale(0.5);
+    }
+
+    50% {
+        transform: scale(0.5);
+    }
+}
+
+/* @keyframes popOutViewport {
+    100% {
+        transform: scale(0.3);
+    }
+} */
+
+.viewport {
+    position: absolute;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+    width: 100%;
+
+    background-color: white;
+
+    animation-duration: 0.5s;
+}
+
+.viewport.popIn {
+    visibility: visible;
+    animation-name: popInViewport;
+}
+
+.viewport.popOut {
+    visibility: hidden;
+    /* animation-name: popOutViewport; */
+}
+
+@keyframes popOutCarouselImage-previous {
+    0%, 99% {
+        z-index: 1;
+    }
+
+    100% {
+        transform: translate(100vw);
+        z-index: 0;
+    }
+}
+
+@keyframes popOutCarouselImage-next {
+    0%, 99% {
+        z-index: 1;
+    }
+
+    100% {
+        transform: translate(-100vw);
+        z-index: 0;
+    }
+}
+
+@keyframes popUpCarouselImage {
+    0% {
+        transform: scale(0.3);
+        z-index: 0;
+    }
+
+    99% {
+        z-index: 0;
+    }
+    
+    100% {
+        z-index: 1;
+    }
+}
+
+.carouselImage {
+    position: absolute;
+
+    max-width: 100%;
+    max-height: 100%;
+
+    box-shadow: 0 0 10px black;
+
+    object-fit: contain;
+    object-position: center center;
+
+    animation-duration: 0.3s;
+    animation-fill-mode: forwards;
+}
+
+#areasContainer {
+    display: grid;
+
+    height: 100%;
+    width: 100%;
+}
+
+.portrait,
+.landscape,
+.square {
+    width: 100%;
+    height: 100%;
+
+    border: thin solid white;
+
+    object-fit: cover;
+    object-position: center center;
+}
+
+@keyframes addZoomImage {
+    0% {
+        visibility: hidden;
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+@keyframes removeZoomImage {
+    100% {
+        visibility: hidden;
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+.zoomImage {
+    position: absolute;
+
+    background-color: rgba(255, 255, 255, 0.5);
+    border: thin solid white;
+    border-width: 5px 5px 0 0;
+    box-shadow: 0 0 10px 3px black;
+    border-radius: 10px;
+
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    transform-origin: center center;
+
+    animation: addZoomImage 0.3s;
+}
+
+@keyframes popInPanelContainer {
+    0% {
+        opacity: 0;
+        transform: translateY(20vh);
+    }
+}
+
+@keyframes popOutPanelContainer {
+    100% {
+        opacity: 0;
+        transform: translateY(20vh);
+        visibility: hidden;
+    }
+}
+
+#panelContainer {
+    position: absolute;
+    bottom: 100px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+
+    width: 90%;
+    height: 60%;
+
+    animation-duration: 0.3s;
+    animation-fill-mode: forwards;
+
+    z-index: 2;
+}
+
+#panelContainer.popIn {
+    animation-name: popInPanelContainer;
+}
+
+#panelContainer.popOut {
+    animation-name: popOutPanelContainer;
+}
+
+.panel {
+    width: 100%;
+    height: 100%;
+
+    padding: 20px 0 20px 0;
+    
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border: solid white;
+    border-width: 5px 5px 0 0;
+    border-radius: 10px;
+    box-shadow: 0 0 10px black;
+}
+
+.panelDivision {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-content: flex-start;
+    overflow: auto;
+    
+    width: 100%;
+    height: 100%;
+}
+
+.panelDivisionSector {
+    height: 60px;
+    padding: 20px;
+    
+    color: black;
+}
+
+.buttonContainer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+
+    box-shadow: 0px 0px 20px black;
+    border-top-right-radius: 10px;
+}
+
+.button {
+    padding: 0 20px 0 20px;
+
+    height: 60px;
+
+    color: black;
+
+    background-color: white;
+    border: none;
+    outline: none;
+}
+
+#navigationControl {
+    position: absolute;
+    bottom: 20px;
+    
+    height: 60px;
+    width: 60px;
+
+    background-color: transparent;
+    box-shadow: 0 0 10px black, inset 0 0 10px white;
+    border: 0 solid black;
+    border-radius: 50%;
+    outline: none;
+
+    font-size: 250%;
+
+    z-index: 3;
+}
+
+@media (orientation: portrait) {
+    #areasContainer {
+        grid-template-columns: repeat(6, calc(100%/6));
+        grid-template-rows: repeat(5, 20%);
+
+        /* Portraits */
+        grid-template-areas:
+            "p1 p1 l2 l2 l2 p5"
+            "p1 p1 s1 s1 p6 p6"
+            "l1 l1 l1 p3 p6 p6"
+            "p2 p2 s2 s2 s3 s3"
+            "p2 p2 p4 l3 l3 l3"
+        ;
+    }
+
+    #portrait1,
+    #landscape2,
+    #portrait5 {
+        border-top: none;
+    }
+
+    #portrait2,
+    #portrait4,
+    #landscape3 {
+        border-bottom: none;
+    }
+
+    #portrait1,
+    #landscape1,
+    #portrait2 {
+        border-left: none;
+    }
+
+    #portrait5,
+    #portrait6,
+    #square3,
+    #landscape3 {
+        border-right: none;
+    }
+
+    .zoomImage-landscape,
+    .zoomImage-square,
+    .zoomImage-portrait {
+        height: auto;
+        width: 90%;
+    }
+}
+
+@media (orientation: landscape) {
+    #areasContainer {
+        grid-template-columns: repeat(10, 10%);
+        grid-template-rows: repeat(3, calc(100% / 3));
+
+        /* Widescreens */
+        grid-template-areas:
+            "p1 p1 l1 l1 l1 s1 s1 p2 p3 p3"
+            "p1 p1 s2 s2 p4 p4 s3 s3 p3 p3"
+            "p5 l2 l2 l2 p4 p4 p6 l3 l3 l3"
+        ;
+    }
+
+    #portrait1,
+    #landscape1,
+    #square1,
+    #portrait2,
+    #portrait3 {
+        border-top: none;
+    }
+
+    #portrait5,
+    #landscape2,
+    #portrait4,
+    #portrait6,
+    #landscape3 {
+        border-bottom: none;
+    }
+
+    #portrait1,
+    #portrait5 {
+        border-left: none;
+    }
+
+    #portrait3,
+    #landscape3 {
+        border-right: none;
+    }
+
+    .zoomImage-landscape,
+    .zoomImage-square,
+    .zoomImage-portrait {
+        height: 90%;
+        width: auto;
+    }
+}

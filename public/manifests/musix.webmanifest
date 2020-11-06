@@ -1,0 +1,17 @@
+{
+  "name": "Musix",
+  "short_name": "\u03BC6",
+  "description": "A simple playlist player app",
+  "start_url": "/musix/",
+  "background_color": "black",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "../images/musix/launcher_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
+

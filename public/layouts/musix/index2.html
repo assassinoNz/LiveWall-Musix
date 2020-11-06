@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en-us" style="height: 100%; width: 100%">
+
+<head>
+    <title id="title">Musix&trade;</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="/musix/manifests/musix.webmanifest" rel="manifest" />
+    <link href="/musix/stylesheets/musix/index2.css" rel="stylesheet" />
+
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- This script tag will unite the module and global scope -->
+    <script>
+        //Initialize a new socket with the server
+        window.socket = io("/musix", { transports: ["websocket"], upgrade: false });
+    </script>
+    <script type="module">
+        //@ts-check
+        import { NowPlayingController } from "/musix/scripts/musix/NowPlayingController.js";
+        import { PlaylistExplorerController } from "/musix/scripts/musix/PlaylistExplorerController.js";
+        import { ContextController } from "/musix/scripts/musix/ContextController.js";
+        import { PlaylistController } from "/musix/scripts/musix/PlaylistController.js";
+        import { Utility } from "/musix/scripts/musix/Utility.js";
+
+        window.addEventListener("contextmenu", (event) => {
+            //Prevent contextMenu
+            event.preventDefault();
+        });
+
+        window.addEventListener("load", () => {
+            //Initialize cardInterface
+            window.cardInterface = new CardInterface();
+        });
+
+        class CardInterface {
+            cardObject = null;
+            title = document.querySelector("title").textContent;
+            nowPlayingController = null;
+            playlistExplorerController = null;
+            contextController = null;
+            playlistsController = null;
+
+            templatesContainerFragment = document.getElementById("templateContainer").content;
+            controls = document.querySelectorAll("#controlsContainer>div>button");
+            createControls = document.querySelectorAll("#createControlsContainer > button");
+            retrieveControls = document.querySelectorAll("#retrieveControlsContainer > button");
+            updateControls = document.querySelectorAll("#updateControlsContainer > button");
+            deleteControls = document.querySelectorAll("#deleteControlsContainer > button");
+
+            constructor() {
+                //Register the service worker
+                //NOTE: This must be done only on secure contexts. navigator.serviceWorker isn't available on insecure contexts
+                if (window.isSecureContext) {
+                    navigator.serviceWorker.register("/musix.serviceWorker.js", { scope: "/musix" });
+                }
+
+                //Initialize PlaylistsController
+                this.playlistsController = new PlaylistController(this);
+                this.contextController = new ContextController(this, document.getElementById("contextPanel"));
+                this.playlistsController.init().then(() => {
+                    //Initialize NowPlayingController and PlaylistExplorerController
+                    this.nowPlayingController = new NowPlayingController(this, document.getElementById("nowPlayingViewport"));
+                    this.playlistExplorerController = new PlaylistExplorerController(this, document.getElementById("playlistExplorerPanel"));
+
+                    //Add mediaSession listeners
+                    this.initMediaSession();
+                });
+
+                //Add webSocket listeners
+                this.initWebSocket();
+
+                //Add events to all controls
+                this.controls[0].addEventListener("click", (event) => {
+                    const keyword = prompt("Specify a keyword to start search");
+                    if (keyword) {
+                        cardInterface.playlistExplorerController.search(keyword);
+                    }
+                });
+                this.controls[1].addEventListener("click", (event) => {
+                    cardInterface.nowPlayingController.toggleRemotePlay();
+                });
+                this.controls[2].addEventListener("click", () => {
+                    this.nowPlayingController.togglePlay();
+                });
+                this.controls[2].addEventListener("touchstart", (event) => {
+                    this.startNavigation(event);
+                });
+                this.controls[2].addEventListener("mousedown", (event) => {
+                    this.startNavigation(event);
+                });
+
+                this.retrieveControls[0].addEventListener("click", (event) => {
+                    this.nowPlayingController.skipTrack("previous");
+                });
+                this.retrieveControls[1].addEventListener("click", (event) => {
+                    this.nowPlayingController.togglePlay();
+                });
+                this.retrieveControls[2].addEventListener("click", (event) => {
+                    this.nowPlayingController.skipTrack("next");
+                });
+                this.retrieveControls[3].addEventListener("click", () => {
+                    Utility.toggleButtonGlyph(this.retrieveControls[3]);
+                });
+                this.retrieveControls[3].children[1].addEventListener("keypress", (event) => {
+                    if (event.key === 'Enter') {
+                        Utility.toggleButtonGlyph(this.retrieveControls[3]);
+                        if (event.currentTarget.value !== "") {
+                            this.playlistExplorerController.search(event.currentTarget.value);
+                        }
+                    }
+                });
+
+                this.updateControls[0].addEventListener("click", (event) => {
+                    this.nowPlayingController.toggleRemotePlay();
+                });
+            }
+
+            initWebSocket() {
+                window.socket.on("remote-disable", (params) => {
+                    this.nowPlayingController.setRemotePlay(false);
+                });
+
+                window.socket.on("remote-set-volume", (params) => {
+                    this.nowPlayingController.setVolume(params.volume);
+                });
+
+                window.socket.on("remote-set-playlist", (params) => {
+                    this.nowPlayingController.setPlaylist(params.playlist);
+                });
+
+                window.socket.on("remote-load-track-at", (params) => {
+                    this.nowPlayingController.loadTrackAt(params.trackIndex);
+                });
+
+                window.socket.on("remote-seek-to", (params) => {
+                    this.nowPlayingController.seekTo(params.time);
+                });
+
+                window.socket.on("remote-toggle-play", (params) => {
+                    this.nowPlayingController.togglePlay();
+                });
+
+                window.socket.on("remote-skip-track", (params) => {
+                    this.nowPlayingController.skipTrack(params.direction);
+                });
+            }
+
+            initMediaSession() {
+                navigator.mediaSession.setActionHandler("play", () => {
+                    this.nowPlayingController.togglePlay();
+                });
+                navigator.mediaSession.setActionHandler("pause", () => {
+                    this.nowPlayingController.togglePlay();
+                });
+                navigator.mediaSession.setActionHandler("previoustrack", () => {
+                    this.nowPlayingController.skipTrack("previous");
+                });
+                navigator.mediaSession.setActionHandler("nexttrack", () => {
+                    this.nowPlayingController.skipTrack("next");
+                });
+            }
+
+            getTemplate(cssQuery) {
+                return this.templatesContainerFragment.querySelector(cssQuery);
+            }
+
+            getControl(controlType) {
+                if (controlType === "navigation") {
+                    return this.controls[2];
+                } else if (controlType === "remotePlay") {
+                    return this.controls[1];
+                }
+            }
+
+            getWebSocket() {
+                return window.socket;
+            }
+
+            getController(controllerType) {
+                switch (controllerType) {
+                    case "nowPlaying": {
+                        return this.nowPlayingController;
+                    }
+
+                    case "playlistExplorer": {
+                        return this.playlistExplorerController;
+                    }
+
+                    case "context": {
+                        return this.contextController;
+                    }
+
+                    case "playlists": {
+                        return this.playlistsController;
+                    }
+                }
+            }
+
+            //EVENT HANDLER METHODS
+            startNavigation(event) {
+                const cardInterface = this;
+
+                const originalMousePositionX = event.screenX || event.touches[0].screenX;
+                const originalMousePositionY = event.screenY || event.touches[0].screenY;
+
+                window.addEventListener("touchmove", determineProcedure);
+                window.addEventListener("mousemove", determineProcedure);
+                window.addEventListener("touchend", executeProcedure);
+                window.addEventListener("mouseup", executeProcedure);
+
+                let differenceX = 0;
+                let differenceY = 0;
+                let procedureToExecute = () => { }
+
+                //INNER EVENT HANDLER FUNCTIONS
+                function determineProcedure(event) {
+                    //Calculate the travelledDistance of the mouse as a vector
+                    differenceX = (event.screenX || event.touches[0].screenX) - originalMousePositionX;
+                    differenceY = (event.screenY || event.touches[0].screenY) - originalMousePositionY;
+
+                    const absoluteDifferenceX = Math.abs(differenceX);
+                    const absoluteDifferenceY = Math.abs(differenceY);
+                    if (absoluteDifferenceX >= absoluteDifferenceY) {
+                        //CASE: x axis must be prioritized
+                        if (differenceX > 0) {
+                            cardInterface.controls[2].firstElementChild.src = "/images/musix/glyph_skipNext.png";
+                            procedureToExecute = () => {
+                                cardInterface.nowPlayingController.skipTrack("next");
+                            };
+                        } else if (differenceX < 0) {
+                            cardInterface.controls[2].firstElementChild.src = "/images/musix/glyph_skipPrevious.png";
+                            procedureToExecute = () => {
+                                cardInterface.nowPlayingController.skipTrack("previous");
+                            };
+                        }
+                    } else {
+                        //CASE: y axis must be prioritized
+                        if (differenceY > 0) {
+                            procedureToExecute = () => {
+                                const panelContainer = document.getElementById("panelContainer");
+                                if (panelContainer.classList.contains("popIn")) {
+                                    panelContainer.classList.replace("popIn", "popOut");
+                                } else {
+                                    panelContainer.classList.replace("popOut", "popIn");
+                                }
+                            };
+                        } else if (differenceY < 0) {
+                            procedureToExecute = () => {
+
+                            };
+                        }
+                    }
+                }
+
+                function executeProcedure() {
+                    procedureToExecute();
+                    //Remove all previously added eventListeners
+                    window.removeEventListener("touchmove", determineProcedure);
+                    window.removeEventListener("mousemove", determineProcedure);
+                    window.removeEventListener("touchend", executeProcedure);
+                    window.removeEventListener("mouseup", executeProcedure);
+                }
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+    <div id="viewportContainer">
+        <div id="nowPlayingViewport" class="viewport">
+            <audio id="mediaController"></audio>
+            <div id="sliderContainer">
+                <div id="controlsContainer">
+                    <div style="transform: rotate(30deg);">
+                        <button>
+                            <img src="/images/musix/glyph_search.png" style="transform: rotate(-30deg);" alt="">
+                        </button>
+                    </div>
+                    <div style="transform: rotate(50deg);">
+                        <button>
+                            <img src="/images/musix/glyph_remotePlay.png" style="transform: rotate(-50deg);" alt="">
+                        </button>
+                    </div>
+                    <div style="transform: rotate(145deg);">
+                        <button id="navigationControl">
+                            <img src="/images/musix/glyph_play.png" style="transform: rotate(-145deg);" alt="">
+                        </button>
+                    </div>
+                </div>
+                <div id="seekSlider" class="slider">
+                    <div></div>
+                </div>
+                <p class="playTimeDisplay" style="top: 33vh; font-size: 500%;">00</p>
+                <p class="playTimeDisplay" style="font-size: 700%;">00</p>
+                <p class="playTimeDisplay" style="bottom: 33vh; font-size: 500%;">0</p>
+                <div id="volumeSlider" class="slider">
+                    <div></div>
+                </div>
+            </div>
+            <div id="displayContainer">
+                <p id="playlistDisplay">Playlist Name</p>
+                <p id="titleDisplay">Artist</p>
+                <p id="artistDisplay">Track Name</p>
+            </div>
+            <!-- <div id="lyricsContainer">
+                <div class="shadower" style="top: 0;"></div>
+                <p id="lyricsDisplay">
+
+                </p>
+                <div class="shadower" style="bottom: 0; background-image: linear-gradient(transparent, black, black);">
+                </div>
+            </div> -->
+        </div>
+    </div>
+
+    <div id="panelContainer" class="popIn">
+        <div id="playlistExplorerPanel" class="panel" data-active-playlist-index="0">
+            <div class="panelDivision">
+
+            </div>
+            <!-- <div class="buttonContainer">
+                <button style="border-top-left-radius: 10px; display:none">ADD</button>
+            </div> -->
+        </div>
+
+        <div id="contextPanel" class="panel popOut">
+            <!-- playlistContextDivision -->
+            <div class="panelDivision" data-playlist-index="0">
+                <div class="panelDivisionSector">
+                    <div class="panelDivisionSectorItem">Playlist Name</div>
+                    <h1 class="title">Download Playlist</h1>
+                </div>
+            </div>
+            <!-- trackContextDivision -->
+            <div class="panelDivision" data-playlist-index="0" data-track-index="0">
+                <div class="panelDivisionSector">
+                    <div class="panelDivisionSectorItem">Song Name</div>
+                    <h1 class="title">Download Track</h1>
+                    <h1 class="title">Add to QuickPlaylist&trade;</h1>
+                </div>
+            </div>
+            <div class="buttonContainer">
+                <button style="border-top-left-radius: 10px;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+<!-- quickAccessArea -->
+<div id="quickAccessArea" style="display: none;">
+    <div id="createControlsContainer">
+
+    </div>
+    <div id="retrieveControlsContainer">
+        <button class="buttonGlyph" title="Previous track">
+            <img src="/images/musix/glyph_skipPrevious.png" />
+        </button>
+        <button class="buttonGlyph" title="Toggle play">
+            <img src="/images/musix/glyph_play.png" />
+        </button>
+        <button class="buttonGlyph" title="Next track">
+            <img src="/images/musix/glyph_skipNext.png" />
+        </button>
+        <button class="buttonGlyph" title="Search for track">
+            <img src="/images/musix/glyph_search.png" />
+            <input type="text" placeholder="TYPE A KEYWORD"
+                style="display:none; height: 100%; width: 100%; text-align: center; background-color: transparent; border: none;"
+                value="" />
+        </button>
+    </div>
+    <div id="updateControlsContainer">
+        <button class="buttonGlyph" title="Toggle RemotePlay">
+            <img src="/images/musix/glyph_remotePlay.png" />
+        </button>
+    </div>
+    <div id="deleteControlsContainer">
+
+    </div>
+</div>
+
+<template id="templateContainer">
+    <div id="playlistViewTemplate">
+        <div class="panelDivisionSector" style="width:auto;">
+            <h1 class="title">Playlist Name</h1>
+        </div>
+        <div class="panelDivisionSector">
+            
+        </div>
+    </div>
+
+    <div class="panelDivisionSectorItem" data-playlist-index="" data-track-index="">
+        Track Name
+    </div>
+</template>
+
+</html>

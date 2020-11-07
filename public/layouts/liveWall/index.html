@@ -83,7 +83,7 @@
 
             //NOTE: This must be done only on secure contexts. navigator.serviceWorker isn't available on insecure contexts
             if (window.isSecureContext) {
-                navigator.serviceWorker.register("../../liveWall.serviceWorker.js", { scope: "/liveWall" });
+                navigator.serviceWorker.register("/liveWall.serviceWorker.js", { scope: "/liveWall/" });
             }
 
             this.switchViewport(0);
@@ -299,18 +299,18 @@
     </div>
     <div id="retrieveControlsContainer">
         <button class="buttonGlyph" title="Previous image">
-            <img src="/images/liveWall/glyph_previousImage.png" />
+            <img src="/liveWall/images/liveWall/glyph_previousImage.png" />
         </button>
         <button class="buttonGlyph" title="Switch viewport">
-            <img src="/images/liveWall/glyph_switchViewport.png" />
+            <img src="/liveWall/images/liveWall/glyph_switchViewport.png" />
         </button>
         <button class="buttonGlyph" title="Next image">
-            <img src="/images/liveWall/glyph_nextImage.png" />
+            <img src="/liveWall/images/liveWall/glyph_nextImage.png" />
         </button>
     </div>
     <div id="updateControlsContainer">
         <button class="buttonGlyph" title="Change root directory">
-            <img src="/images/liveWall/glyph_changeDirectory.png" />
+            <img src="/liveWall/images/liveWall/glyph_changeDirectory.png" />
             <input type="text" placeholder="TYPE AN ABSOLUTE PATH"
                 style="display:none; height: 100%; width: 100%; text-align: center; background-color: transparent; border: none;"
                 value="/media/assassino/Pictures" />

@@ -24,7 +24,7 @@ self.addEventListener("activate", async (event) => {
     console.log("ServiceWorker activation successful");
 });
 
-self.addEventListener("fetch", (event) => {    
+self.addEventListener("fetch", (event) => {
     event.respondWith(
         caches.open(cacheName).then((cache) => {
             return cache.match(event.request).then((cachedResponse) => {

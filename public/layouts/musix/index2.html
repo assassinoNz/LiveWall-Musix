@@ -203,6 +203,8 @@
 
                 const originalMousePositionX = event.screenX || event.touches[0].screenX;
                 const originalMousePositionY = event.screenY || event.touches[0].screenY;
+                //Save the button image
+                const buttonImageSrc = cardInterface.controls[2].firstElementChild.src;
 
                 window.addEventListener("touchmove", determineProcedure);
                 window.addEventListener("mousemove", determineProcedure);
@@ -224,12 +226,12 @@
                     if (absoluteDifferenceX >= absoluteDifferenceY) {
                         //CASE: x axis must be prioritized
                         if (differenceX > 0) {
-                            cardInterface.controls[2].firstElementChild.src = "/images/musix/glyph_skipNext.png";
+                            cardInterface.controls[2].firstElementChild.src = "/musix/images/musix/glyph_skipNext.png";
                             procedureToExecute = () => {
                                 cardInterface.nowPlayingController.skipTrack("next");
                             };
                         } else if (differenceX < 0) {
-                            cardInterface.controls[2].firstElementChild.src = "/images/musix/glyph_skipPrevious.png";
+                            cardInterface.controls[2].firstElementChild.src = "/musix/images/musix/glyph_skipPrevious.png";
                             procedureToExecute = () => {
                                 cardInterface.nowPlayingController.skipTrack("previous");
                             };
@@ -237,6 +239,7 @@
                     } else {
                         //CASE: y axis must be prioritized
                         if (differenceY > 0) {
+                            cardInterface.controls[2].firstElementChild.src = "";
                             procedureToExecute = () => {
                                 const panelContainer = document.getElementById("panelContainer");
                                 if (panelContainer.classList.contains("popIn")) {
@@ -246,14 +249,16 @@
                                 }
                             };
                         } else if (differenceY < 0) {
+                            cardInterface.controls[2].firstElementChild.src = "";
                             procedureToExecute = () => {
-
+                                
                             };
                         }
                     }
                 }
-
+                
                 function executeProcedure() {
+                    cardInterface.controls[2].firstElementChild.src = buttonImageSrc;
                     procedureToExecute();
                     //Remove all previously added eventListeners
                     window.removeEventListener("touchmove", determineProcedure);
@@ -385,7 +390,7 @@
         <div class="panelDivisionSector" style="width:auto;">
             <h1 class="title">Playlist Name</h1>
         </div>
-        <div class="panelDivisionSector">
+        <div class="panelDivisionSector inactive">
             
         </div>
     </div>

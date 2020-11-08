@@ -1,7 +1,8 @@
 //@ts-check
+import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
 import { Utility } from "./Utility.js";
 
-export class PlaylistController {
+export class MusicSourceController {
     cardInterface = null;
     playlists = [];
 
@@ -130,7 +131,7 @@ export class PlaylistController {
         //Randomize themeColor
         playlist.themeColor = Utility.getRandColor();
 
-        this.cardInterface.getController("playlistExplorer").appendNewPlaylistView(playlist);
+        PlaylistExplorerController.appendNewPlaylistView(playlist);
 
         return assignedPlaylistIndex;
     }
@@ -138,7 +139,7 @@ export class PlaylistController {
     appendTrackToPlaylist(playlist, track) {
         const assignedTrackIndex = playlist.tracks.push(track) - 1;
 
-        this.cardInterface.getController("playlistExplorer").appendNewTrackView(playlist, {
+        PlaylistExplorerController.appendNewTrackView(playlist, {
             playlistIndex: playlist.index,
             trackIndex: assignedTrackIndex
         });
@@ -150,7 +151,7 @@ export class PlaylistController {
         if (localStorage.getItem("quickPlaylistIndex") === "-1") {
             //CASE: There is no quick playlist created
             //Create the quick playlist in the playlists[]
-            const quickPlaylist = PlaylistController.createNewPlaylist("Quick Playlist", track);
+            const quickPlaylist = MusicSourceController.createNewPlaylist("Quick Playlist", track);
             const quickPlaylistIndex = this.appendPlaylist(quickPlaylist);
             localStorage.setItem("quickPlaylistIndex", quickPlaylistIndex.toString());
             //Ask to begin playback of quickPlaylist

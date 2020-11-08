@@ -35,11 +35,11 @@ export class NowPlayingController {
             localStorage.setItem("currentTrackTime", "0");
             localStorage.setItem("currentVolume", "0.5");
         }
-        if (parseInt(localStorage.getItem("currentPlaylistIndex")) >= this.cardInterface.getController("playlists").getPlaylists().length) {
+        if (parseInt(localStorage.getItem("currentPlaylistIndex")) >= this.cardInterface.getController("musicSource").getPlaylists().length) {
             //CASE: User had a custom playlist in the previous session
             //Current playlistIndex, trackIndex and trackTime must be reset because there is no quickPlaylist in this session and we cannot continue it
             //Choose a random playlistIndex as currentPlaylistIndex
-            localStorage.setItem("currentPlaylistIndex", Utility.getRandInt(0, this.cardInterface.getController("playlists").getPlaylists().length).toString());
+            localStorage.setItem("currentPlaylistIndex", Utility.getRandInt(0, this.cardInterface.getController("musicSource").getPlaylists().length).toString());
             localStorage.setItem("currentTrackIndex", "0");
             localStorage.setItem("currentTrackTime", "0");
         }
@@ -97,7 +97,7 @@ export class NowPlayingController {
 
         //Reinstate mediaController to last position
         this.setVolume(parseFloat(localStorage.getItem("currentVolume")));
-        this.setPlaylist(this.cardInterface.getController("playlists").getPlaylistAt(parseInt(localStorage.getItem("currentPlaylistIndex"))));
+        this.setPlaylist(this.cardInterface.getController("musicSource").getPlaylistAt(parseInt(localStorage.getItem("currentPlaylistIndex"))));
         this.loadTrackAt(parseInt(localStorage.getItem("currentTrackIndex")));
         this.seekTo(parseFloat(localStorage.getItem("currentTrackTime")));
     }
@@ -259,8 +259,8 @@ export class NowPlayingController {
     }
 
     skipTrack(direction) {
-        const upcomingTrackPosition = this.cardInterface.getController("playlists").queryRelativeTrackPosition(direction);
-        const playlist = this.cardInterface.getController("playlists").getPlaylistAt(upcomingTrackPosition.playlistIndex);
+        const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
+        const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
 
         this.setPlaylist(playlist);
         this.loadTrackAt(upcomingTrackPosition.trackIndex);

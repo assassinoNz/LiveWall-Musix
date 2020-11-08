@@ -20,7 +20,7 @@
         import { NowPlayingController } from "/musix/scripts/musix/NowPlayingController.js";
         import { PlaylistExplorerController } from "/musix/scripts/musix/PlaylistExplorerController.js";
         import { ContextController } from "/musix/scripts/musix/ContextController.js";
-        import { PlaylistController } from "/musix/scripts/musix/PlaylistController.js";
+        import { MusicSourceController } from "/musix/scripts/musix/MusicSourceController.js";
         import { Utility } from "/musix/scripts/musix/Utility.js";
 
         window.addEventListener("contextmenu", (event) => {
@@ -37,9 +37,7 @@
             cardObject = null;
             title = document.querySelector("title").textContent;
             nowPlayingController = null;
-            playlistExplorerController = null;
-            contextController = null;
-            playlistsController = null;
+            musicSourceController = null;
 
             templatesContainerFragment = document.getElementById("templateContainer").content;
             controls = document.querySelectorAll("#controlsContainer>div>button");
@@ -56,12 +54,14 @@
                 }
 
                 //Initialize PlaylistsController
-                this.playlistsController = new PlaylistController(this);
-                this.contextController = new ContextController(this, document.getElementById("contextPanel"));
-                this.playlistsController.init().then(() => {
+                this.musicSourceController = new MusicSourceController(this);
+                this.musicSourceController.init().then(() => {
                     //Initialize NowPlayingController and PlaylistExplorerController
                     this.nowPlayingController = new NowPlayingController(this, document.getElementById("nowPlayingViewport"));
-                    this.playlistExplorerController = new PlaylistExplorerController(this, document.getElementById("playlistExplorerPanel"));
+                    
+                    //Initialize static controllers
+                    ContextController.init(this, document.getElementById("contextPanel"));
+                    PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
 
                     //Add mediaSession listeners
                     this.initMediaSession();
@@ -183,16 +183,8 @@
                         return this.nowPlayingController;
                     }
 
-                    case "playlistExplorer": {
-                        return this.playlistExplorerController;
-                    }
-
-                    case "context": {
-                        return this.contextController;
-                    }
-
-                    case "playlists": {
-                        return this.playlistsController;
+                    case "musicSource": {
+                        return this.musicSourceController;
                     }
                 }
             }

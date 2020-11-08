@@ -1,54 +1,50 @@
 //@ts-check
 export class ContextController {
-    cardInterface = null;
+    static cardInterface = null;
 
-    view = null;
+    static view = null;
 
-    constructor(cardInterface, panelView) {
-        this.cardInterface = cardInterface;
+    static init(cardInterface, panelView) {
+        ContextController.cardInterface = cardInterface;
 
-        this.view = panelView;
+        ContextController.view = panelView;
 
-        this.view.querySelector("button").addEventListener("click", () => {
-            this.hide();
+        ContextController.view.querySelector("button").addEventListener("click", () => {
+            ContextController.hide();
         });
 
-        const panelDivisions = this.view.querySelectorAll(".panelDivision");
+        const panelDivisions = ContextController.view.querySelectorAll(".panelDivision");
         //Add onclick to downloadPlaylistButton for downloading the playlist
         panelDivisions[0].firstElementChild.children[1].addEventListener("click", () => {
             location.href = `/musix/playlists/${panelDivisions[0].dataset.playlistIndex}`;
-            this.hide();
+            ContextController.hide();
         });
 
         //Add onclick to downloadTrackButton for downloading the track
         panelDivisions[1].firstElementChild.children[1].addEventListener("click", () => {
                 location.href = `/musix/playlists/${panelDivisions[1].dataset.playlistIndex}/tracks/${panelDivisions[1].dataset.trackIndex}`;
-                this.hide();
+                ContextController.hide();
         });
         //Add onclick to addToQuickPlaylist button for adding the track to quickPlaylist
         panelDivisions[1].firstElementChild.children[2].addEventListener("click", () => {
-            this.cardInterface.getController("playlists").addToQuickPlaylist(this.cardInterface.getController("playlists").getTrackAt({
+            ContextController.cardInterface.getController("musicSource").addToQuickPlaylist(ContextController.cardInterface.getController("musicSource").getTrackAt({
                 trackIndex: panelDivisions[1].dataset.trackIndex,
                 playlistIndex: panelDivisions[1].dataset.playlistIndex,
             }));
-            this.hide();
+            ContextController.hide();
         });
     }
 
-    getView() {
-        return this.view;
+    static show() {
+        ContextController.view.classList.replace("popOut", "popIn");
     }
 
-    show() {
-        this.view.classList.replace("popOut", "popIn");
+    static hide() {
+        ContextController.view.classList.replace("popIn", "popOut");
     }
 
-    hide() {
-        this.view.classList.replace("popIn", "popOut");
-    }
-
-    setupPlaylistContext(titleTextContent, playlistIndex) {
-        const panelDivisions = this.view.querySelectorAll(".panelDivision");
+    static setupPlaylistContext(titleTextContent, playlistIndex) {
+        const panelDivisions = ContextController.view.querySelectorAll(".panelDivision");
         panelDivisions[0].style.display = "initial";
         panelDivisions[1].style.display = "none";
 
@@ -57,8 +53,8 @@ export class ContextController {
         panelDivisions[0].firstElementChild.children[0].textContent = titleTextContent;
     }
 
-    setupTrackContext(titleTextContent, trackPosition) {
-        const panelDivisions = this.view.querySelectorAll(".panelDivision");
+    static setupTrackContext(titleTextContent, trackPosition) {
+        const panelDivisions = ContextController.view.querySelectorAll(".panelDivision");
         panelDivisions[0].style.display = "none";
         panelDivisions[1].style.display = "initial";
 

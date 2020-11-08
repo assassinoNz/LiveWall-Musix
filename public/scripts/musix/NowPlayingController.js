@@ -1,4 +1,5 @@
 //@ts-check
+import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
 import { Utility } from "./Utility.js";
 
 export class NowPlayingController {
@@ -35,7 +36,7 @@ export class NowPlayingController {
         this.controls[0].addEventListener("click", (event) => {
             const keyword = prompt("Specify a keyword to start search");
             if (keyword) {
-                cardInterface.playlistExplorerController.search(keyword);
+                PlaylistExplorerController.search(keyword);
             }
         });
         this.controls[1].addEventListener("click", (event) => {

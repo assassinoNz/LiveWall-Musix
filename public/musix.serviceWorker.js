@@ -1,13 +1,9 @@
 //@ts-check
 const cacheName = "musixV1";
-const cachableURLSegments = [
-    "/fonts",
-    "/images/musix",
-    "/layouts/musix",
-    "/stylesheets/musix",
-    "/scripts/musix",
-    "/socket.io/socket.io.js",
-    "/lyrics"
+const nonCachableURLSegments = [
+    "/musix/playlists",
+    "/musix/lyrics",
+    ".mp3"
 ];
 
 self.addEventListener("install", (event) => {
@@ -34,11 +30,11 @@ self.addEventListener("fetch", (event) => {
                     return cachedResponse;
                 } else {
                     //CASE: A cached response doesn't exist
-                    let isCachable = false;
+                    let isCachable = true;
                     if (event.request.method === "GET") {
-                        for (const urlSegment of cachableURLSegments) {
+                        for (const urlSegment of nonCachableURLSegments) {
                             if (event.request.url.includes(urlSegment)) {
-                                isCachable = true;
+                                isCachable = false;
                                 break;
                             }
                         }

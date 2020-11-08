@@ -5,28 +5,47 @@ import { Utility } from "./Utility.js";
 export class MusicSourceController {
     cardInterface = null;
     playlists = [];
+    offline = false;
+    rootDirectoryHandle = null;
+    latestTrackUrl = null;
 
     constructor(cardInterface) {
         this.cardInterface = cardInterface;
     }
 
-    init() {
-        //Request playlist database and playlist metadata
-        return fetch("/musix/playlists")
-            .then(response => response.json())
-            .then(response => {
-                if (response.status) {
-                    this.playlists = response.data;
-                    //Add each playlist's index as field in the playlist
-                    for (let playlistIndex = 0; playlistIndex < this.playlists.length; playlistIndex++) {
-                        this.playlists[playlistIndex].index = playlistIndex;
+    async init(offline) {
+        this.offline = offline;
+
+        if (offline) {
+            this.rootDirectoryHandle = await showDirectoryPicker();
+
+            const playlistFileHandle = await (await this.rootDirectoryHandle.getDirectoryHandle("Registries")).getFileHandle("playlists.json");
+            const playlistFile = await playlistFileHandle.getFile();
+            this.playlists = JSON.parse(await playlistFile.text());
+
+            //Add each playlist's index as field in the playlist
+            for (let playlistIndex = 0; playlistIndex < this.playlists.length; playlistIndex++) {
+                this.playlists[playlistIndex].index = playlistIndex;
+            }
+        } else {
+            //Request playlist database and playlist metadata
+            return fetch("/musix/playlists")
+                .then(response => response.json())
+                .then(response => {
+                    if (response.status) {
+                        this.playlists = response.data;
+                        //Add each playlist's index as field in the playlist
+                        for (let playlistIndex = 0; playlistIndex < this.playlists.length; playlistIndex++) {
+                            this.playlists[playlistIndex].index = playlistIndex;
+                        }
+                    } else if (response.serverError === "network") {
+                        // this.cardInterface.getController("nowPlaying").view.querySelector("#lyricsDisplay").innerHTML = "Oops! Something's up with the network connection";
+                    } else {
+                        alert(response.serverError);
                     }
-                } else if (response.serverError === "network") {
-                    this.cardInterface.getController("nowPlaying").view.querySelector("#lyricsDisplay").innerHTML = "Oops! Something's up with the network connection";
-                } else {
-                    alert(response.serverError);
-                }
-            });
+                });
+        }
+
     }
 
     getPlaylists() {
@@ -39,6 +58,24 @@ export class MusicSourceController {
 
     getTrackAt(trackPosition) {
         return this.playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
+    }
+
+    async determineTrackUrl(track) {
+        if (this.offline) {
+            if (this.latestTrackUrl) {
+                URL.revokeObjectURL(this.latestTrackUrl);
+            }
+
+            const trackPathParts = track.path.split("/");
+            const trackFileHandle = await (await this.rootDirectoryHandle.getDirectoryHandle(trackPathParts[0])).getFileHandle(trackPathParts[1]);
+            const trackFile = await trackFileHandle.getFile();
+
+            this.latestTrackUrl = URL.createObjectURL(trackFile);
+            return this.latestTrackUrl;
+
+        } else {
+            return track.path;
+        }
     }
 
     queryRelativePlaylistPosition(relativity) {
@@ -157,17 +194,15 @@ export class MusicSourceController {
             //Ask to begin playback of quickPlaylist
             if (window.frameElement) {
                 window.parent.shellInterface.throwAlert("Got a question", "Do you want to start QuickPlaylist now?", "Tap YES if you want to start playback of the QuickPlaylist immediately. Otherwise tap on NO", null, "YES", "NO").then(() => {
-                    this.cardInterface.getController("nowPlaying").setPlaylist(quickPlaylist);
-                    this.cardInterface.getController("nowPlaying").loadTrackAt(0);
-                    this.cardInterface.getController("nowPlaying").togglePlay();
+                    this.cardInterface.getController("playback").setPlaylist(quickPlaylist);
+                    this.cardInterface.getController("playback").loadTrackAt(0, true);
                 }, () => {
                     //Do nothing here
                 });
             } else {
                 if (confirm("Do you want to start playback of QuickPlaylist now?")) {
-                    this.cardInterface.getController("nowPlaying").setPlaylist(quickPlaylist);
-                    this.cardInterface.getController("nowPlaying").loadTrackAt(0);
-                    this.cardInterface.getController("nowPlaying").togglePlay();
+                    this.cardInterface.getController("playback").setPlaylist(quickPlaylist);
+                    this.cardInterface.getController("playback").loadTrackAt(0, true);
                 };
             }
         } else {

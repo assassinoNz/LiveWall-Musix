@@ -18,6 +18,7 @@
     <script type="module">
         //@ts-check
         import { NowPlayingController } from "/musix/scripts/musix/NowPlayingController.js";
+        import { PlaybackController } from "/musix/scripts/musix/PlaybackController.js";
         import { PlaylistExplorerController } from "/musix/scripts/musix/PlaylistExplorerController.js";
         import { ContextController } from "/musix/scripts/musix/ContextController.js";
         import { MusicSourceController } from "/musix/scripts/musix/MusicSourceController.js";
@@ -36,11 +37,10 @@
         class CardInterface {
             cardObject = null;
             title = document.querySelector("title").textContent;
-            nowPlayingController = null;
+            playBackController = null;
             musicSourceController = null;
 
             templatesContainerFragment = document.getElementById("templateContainer").content;
-            controls = document.querySelectorAll("#controlsContainer>div>button");
             createControls = document.querySelectorAll("#createControlsContainer > button");
             retrieveControls = document.querySelectorAll("#retrieveControlsContainer > button");
             updateControls = document.querySelectorAll("#updateControlsContainer > button");
@@ -53,51 +53,32 @@
                     navigator.serviceWorker.register("/musix/musix.serviceWorker.js", { scope: "/musix/" });
                 }
 
-                //Initialize PlaylistsController
+                //Create musicSourceController without initializing
                 this.musicSourceController = new MusicSourceController(this);
-                this.musicSourceController.init().then(() => {
-                    //Initialize NowPlayingController and PlaylistExplorerController
-                    this.nowPlayingController = new NowPlayingController(this, document.getElementById("nowPlayingViewport"));
-                    
-                    //Initialize static controllers
-                    ContextController.init(this, document.getElementById("contextPanel"));
-                    PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
 
-                    //Add mediaSession listeners
-                    this.initMediaSession();
+                //Initialize media session
+                navigator.mediaSession.setActionHandler("play", () => {
+                    this.playBackController.togglePlay();
+                });
+                navigator.mediaSession.setActionHandler("pause", () => {
+                    this.playBackController.togglePlay();
+                });
+                navigator.mediaSession.setActionHandler("previoustrack", () => {
+                    this.playBackController.skipTrack("previous");
+                });
+                navigator.mediaSession.setActionHandler("nexttrack", () => {
+                    this.playBackController.skipTrack("next");
                 });
 
-                //Add webSocket listeners
-                this.initWebSocket();
-
-                //Add events to all controls
-                this.controls[0].addEventListener("click", (event) => {
-                    const keyword = prompt("Specify a keyword to start search");
-                    if (keyword) {
-                        cardInterface.playlistExplorerController.search(keyword);
-                    }
-                });
-                this.controls[1].addEventListener("click", (event) => {
-                    cardInterface.nowPlayingController.toggleRemotePlay();
-                });
-                this.controls[2].addEventListener("click", () => {
-                    this.nowPlayingController.togglePlay();
-                });
-                this.controls[2].addEventListener("touchstart", (event) => {
-                    this.startNavigation(event);
-                });
-                this.controls[2].addEventListener("mousedown", (event) => {
-                    this.startNavigation(event);
-                });
 
                 this.retrieveControls[0].addEventListener("click", (event) => {
-                    this.nowPlayingController.skipTrack("previous");
+                    this.playBackController.skipTrack("previous");
                 });
                 this.retrieveControls[1].addEventListener("click", (event) => {
-                    this.nowPlayingController.togglePlay();
+                    this.playBackController.togglePlay();
                 });
                 this.retrieveControls[2].addEventListener("click", (event) => {
-                    this.nowPlayingController.skipTrack("next");
+                    this.playBackController.skipTrack("next");
                 });
                 this.retrieveControls[3].addEventListener("click", () => {
                     Utility.toggleButtonGlyph(this.retrieveControls[3]);
@@ -112,65 +93,68 @@
                 });
 
                 this.updateControls[0].addEventListener("click", (event) => {
-                    this.nowPlayingController.toggleRemotePlay();
+                    this.playBackController.toggleRemotePlay();
                 });
+
+                this.init(false);
             }
 
-            initWebSocket() {
-                window.socket.on("remote-disable", (params) => {
-                    this.nowPlayingController.setRemotePlay(false);
-                });
+            init(offline) {
+                if (offline) {
+                    this.musicSourceController.init(offline).then(() => {
+                        //Initialize static controllers
+                        ContextController.init(this, document.getElementById("contextPanel"));
+                        PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
+                        NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
 
-                window.socket.on("remote-set-volume", (params) => {
-                    this.nowPlayingController.setVolume(params.volume);
-                });
+                        //Initialize playBackController
+                        this.playBackController = new PlaybackController(this, document.getElementById("mediaController"));
+                    });
+                } else {
+                    this.musicSourceController.init(offline).then(() => {
+                        //Initialize static controllers
+                        ContextController.init(this, document.getElementById("contextPanel"));
+                        PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
+                        NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
 
-                window.socket.on("remote-set-playlist", (params) => {
-                    this.nowPlayingController.setPlaylist(params.playlist);
-                });
+                        //Initialize playBackController
+                        this.playBackController = new PlaybackController(this, document.getElementById("mediaController"));
 
-                window.socket.on("remote-load-track-at", (params) => {
-                    this.nowPlayingController.loadTrackAt(params.trackIndex);
-                });
+                        //Initialize web-socket handlers
+                        //NOTE: This must be done only in online mode
+                        window.socket.on("remote-disable", (params) => {
+                            this.playBackController.setRemotePlay(false);
+                        });
 
-                window.socket.on("remote-seek-to", (params) => {
-                    this.nowPlayingController.seekTo(params.time);
-                });
+                        window.socket.on("remote-set-volume", (params) => {
+                            this.playBackController.setVolume(params.volume);
+                        });
 
-                window.socket.on("remote-toggle-play", (params) => {
-                    this.nowPlayingController.togglePlay();
-                });
+                        window.socket.on("remote-set-playlist", (params) => {
+                            this.playBackController.setPlaylist(params.playlist);
+                        });
 
-                window.socket.on("remote-skip-track", (params) => {
-                    this.nowPlayingController.skipTrack(params.direction);
-                });
-            }
+                        window.socket.on("remote-load-track-at", (params) => {
+                            this.playBackController.loadTrackAt(params.trackIndex, params.autoplay);
+                        });
 
-            initMediaSession() {
-                navigator.mediaSession.setActionHandler("play", () => {
-                    this.nowPlayingController.togglePlay();
-                });
-                navigator.mediaSession.setActionHandler("pause", () => {
-                    this.nowPlayingController.togglePlay();
-                });
-                navigator.mediaSession.setActionHandler("previoustrack", () => {
-                    this.nowPlayingController.skipTrack("previous");
-                });
-                navigator.mediaSession.setActionHandler("nexttrack", () => {
-                    this.nowPlayingController.skipTrack("next");
-                });
+                        window.socket.on("remote-seek-to", (params) => {
+                            this.playBackController.seekTo(params.time);
+                        });
+
+                        window.socket.on("remote-toggle-play", (params) => {
+                            this.playBackController.togglePlay();
+                        });
+
+                        window.socket.on("remote-skip-track", (params) => {
+                            this.playBackController.skipTrack(params.direction);
+                        });
+                    });
+                }
             }
 
             getTemplate(cssQuery) {
                 return this.templatesContainerFragment.querySelector(cssQuery);
-            }
-
-            getControl(controlType) {
-                if (controlType === "navigation") {
-                    return this.controls[2];
-                } else if (controlType === "remotePlay") {
-                    return this.controls[1];
-                }
             }
 
             getWebSocket() {
@@ -179,84 +163,13 @@
 
             getController(controllerType) {
                 switch (controllerType) {
-                    case "nowPlaying": {
-                        return this.nowPlayingController;
+                    case "playback": {
+                        return this.playBackController;
                     }
 
                     case "musicSource": {
                         return this.musicSourceController;
                     }
-                }
-            }
-
-            //EVENT HANDLER METHODS
-            startNavigation(event) {
-                const cardInterface = this;
-
-                const originalMousePositionX = event.screenX || event.touches[0].screenX;
-                const originalMousePositionY = event.screenY || event.touches[0].screenY;
-                //Save the button image
-                const buttonImageSrc = cardInterface.controls[2].firstElementChild.src;
-
-                window.addEventListener("touchmove", determineProcedure);
-                window.addEventListener("mousemove", determineProcedure);
-                window.addEventListener("touchend", executeProcedure);
-                window.addEventListener("mouseup", executeProcedure);
-
-                let differenceX = 0;
-                let differenceY = 0;
-                let procedureToExecute = () => { }
-
-                //INNER EVENT HANDLER FUNCTIONS
-                function determineProcedure(event) {
-                    //Calculate the travelledDistance of the mouse as a vector
-                    differenceX = (event.screenX || event.touches[0].screenX) - originalMousePositionX;
-                    differenceY = (event.screenY || event.touches[0].screenY) - originalMousePositionY;
-
-                    const absoluteDifferenceX = Math.abs(differenceX);
-                    const absoluteDifferenceY = Math.abs(differenceY);
-                    if (absoluteDifferenceX >= absoluteDifferenceY) {
-                        //CASE: x axis must be prioritized
-                        if (differenceX > 0) {
-                            cardInterface.controls[2].firstElementChild.src = "/musix/images/musix/glyph_skipNext.png";
-                            procedureToExecute = () => {
-                                cardInterface.nowPlayingController.skipTrack("next");
-                            };
-                        } else if (differenceX < 0) {
-                            cardInterface.controls[2].firstElementChild.src = "/musix/images/musix/glyph_skipPrevious.png";
-                            procedureToExecute = () => {
-                                cardInterface.nowPlayingController.skipTrack("previous");
-                            };
-                        }
-                    } else {
-                        //CASE: y axis must be prioritized
-                        if (differenceY > 0) {
-                            cardInterface.controls[2].firstElementChild.src = "";
-                            procedureToExecute = () => {
-                                const panelContainer = document.getElementById("panelContainer");
-                                if (panelContainer.classList.contains("popIn")) {
-                                    panelContainer.classList.replace("popIn", "popOut");
-                                } else {
-                                    panelContainer.classList.replace("popOut", "popIn");
-                                }
-                            };
-                        } else if (differenceY < 0) {
-                            cardInterface.controls[2].firstElementChild.src = "";
-                            procedureToExecute = () => {
-                                
-                            };
-                        }
-                    }
-                }
-                
-                function executeProcedure() {
-                    cardInterface.controls[2].firstElementChild.src = buttonImageSrc;
-                    procedureToExecute();
-                    //Remove all previously added eventListeners
-                    window.removeEventListener("touchmove", determineProcedure);
-                    window.removeEventListener("mousemove", determineProcedure);
-                    window.removeEventListener("touchend", executeProcedure);
-                    window.removeEventListener("mouseup", executeProcedure);
                 }
             }
         }
@@ -277,7 +190,8 @@
                     </div>
                     <div style="transform: rotate(50deg);">
                         <button>
-                            <img src="/musix/images/musix/glyph_remotePlay.png" style="transform: rotate(-50deg);" alt="">
+                            <img src="/musix/images/musix/glyph_remotePlay.png" style="transform: rotate(-50deg);"
+                                alt="">
                         </button>
                     </div>
                     <div style="transform: rotate(145deg);">
@@ -383,7 +297,7 @@
             <h1 class="title">Playlist Name</h1>
         </div>
         <div class="panelDivisionSector inactive">
-            
+
         </div>
     </div>
 

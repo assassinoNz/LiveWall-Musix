@@ -100,9 +100,8 @@ export class PlaylistExplorerController {
         trackView.dataset.trackIndex = trackPosition.trackIndex.toString();
 
         trackView.addEventListener("click", (event) => {
-            PlaylistExplorerController.cardInterface.getController("nowPlaying").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex))
-            PlaylistExplorerController.cardInterface.getController("nowPlaying").loadTrackAt(trackPosition.trackIndex);
-            PlaylistExplorerController.cardInterface.getController("nowPlaying").togglePlay();
+            PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex))
+            PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(trackPosition.trackIndex, true);
         });
 
         trackView.addEventListener("contextmenu", (event) => {
@@ -131,8 +130,8 @@ export class PlaylistExplorerController {
         for (let i = 0; i < panelDivisionSectorItems.length; i++) {
             if (panelDivisionSectorItems[i].textContent.toLowerCase().includes(keyword)) {
                 panelDivisionSectorItems[i].scrollIntoView();
-                PlaylistExplorerController.cardInterface.getController("nowPlaying").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(parseInt(panelDivisionSectorItems[i].dataset.playlistIndex)));
-                PlaylistExplorerController.cardInterface.getController("nowPlaying").loadTrackAt(parseInt(panelDivisionSectorItems[i].dataset.trackIndex));
+                PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(parseInt(panelDivisionSectorItems[i].dataset.playlistIndex)));
+                PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(parseInt(panelDivisionSectorItems[i].dataset.trackIndex), false);
                 found = true;
                 break;
             }

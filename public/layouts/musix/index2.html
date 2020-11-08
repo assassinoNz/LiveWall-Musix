@@ -13,7 +13,7 @@
     <!-- This script tag will unite the module and global scope -->
     <script>
         //Initialize a new socket with the server
-        window.socket = io("/musix", { transports: ["websocket"], upgrade: false });
+        window.socketIo = io;
     </script>
     <script type="module">
         //@ts-check
@@ -133,6 +133,7 @@
                         NowPlayingController.setState("offline", offline);
 
                         //Initialize web-socket handlers
+                        window.socket = window.socketIo("/musix", { transports: ["websocket"], upgrade: false });
                         //NOTE: This must be done only in online mode
                         window.socket.on("remote-disable", (params) => {
                             this.playBackController.setRemotePlay(false);

@@ -96,9 +96,15 @@
                     this.playBackController.toggleRemotePlay();
                 });
 
-                this.init(false);
+                const overlayContainer = document.getElementById("overlayContainer");
+                overlayContainer.children[0].addEventListener("click", () => {
+                    this.init(false);
+                });
+                overlayContainer.children[1].addEventListener("click", () => {
+                    this.init(true);
+                });
             }
-
+            
             init(offline) {
                 if (offline) {
                     this.musicSourceController.init(offline).then(() => {
@@ -106,9 +112,12 @@
                         ContextController.init(this, document.getElementById("contextPanel"));
                         PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
                         NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
-
+                        
                         //Initialize playBackController
                         this.playBackController = new PlaybackController(this, document.getElementById("mediaController"));
+
+                        //Setup UI
+                        NowPlayingController.setState("offline", offline);
                     });
                 } else {
                     this.musicSourceController.init(offline).then(() => {
@@ -119,6 +128,9 @@
 
                         //Initialize playBackController
                         this.playBackController = new PlaybackController(this, document.getElementById("mediaController"));
+
+                        //Setup UI
+                        NowPlayingController.setState("offline", offline);
 
                         //Initialize web-socket handlers
                         //NOTE: This must be done only in online mode
@@ -256,6 +268,11 @@
                 <button style="border-top-left-radius: 10px;">CLOSE</button>
             </div>
         </div>
+    </div>
+
+    <div id="overlayContainer">
+        <button>ONLINE</button>
+        <button>OFFLINE</button>
     </div>
 </body>
 

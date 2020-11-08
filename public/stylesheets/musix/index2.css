@@ -404,3 +404,32 @@ body {
     border: none;
     outline: none;
 }
+
+#overlayContainer {
+    position: absolute;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    height: 100%;
+    width: 100%;
+
+    background-color: black;
+
+    z-index: 3;
+}
+
+#overlayContainer > button {
+    margin: 20px 0 20px 0;
+    height: 25vw;
+    width: 25vw;
+    
+    background-color: var(--tertiaryColor);
+    box-shadow: 0 0 10px var(--themeColor);
+    border: solid var(--secondaryColor);
+    border-width: 2px 2px 2px 2px;
+    border-radius: 50%;
+    outline: none;
+}

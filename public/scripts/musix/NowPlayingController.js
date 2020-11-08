@@ -33,28 +33,37 @@ export class NowPlayingController {
         });
 
         //Add events to all controls
-        this.controls[0].addEventListener("click", (event) => {
+        NowPlayingController.controls[0].addEventListener("click", (event) => {
             const keyword = prompt("Specify a keyword to start search");
             if (keyword) {
                 PlaylistExplorerController.search(keyword);
             }
         });
-        this.controls[1].addEventListener("click", (event) => {
-            this.cardInterface.getController("playback").toggleRemotePlay();
+        NowPlayingController.controls[1].addEventListener("click", (event) => {
+            NowPlayingController.cardInterface.getController("playback").toggleRemotePlay();
         });
-        this.controls[2].addEventListener("click", () => {
-            this.cardInterface.getController("playback").togglePlay();
+        NowPlayingController.controls[2].addEventListener("click", () => {
+            NowPlayingController.cardInterface.getController("playback").togglePlay();
         });
-        this.controls[2].addEventListener("touchstart", (event) => {
+        NowPlayingController.controls[2].addEventListener("touchstart", (event) => {
             NowPlayingController.startNavigation(event);
         });
-        this.controls[2].addEventListener("mousedown", (event) => {
+        NowPlayingController.controls[2].addEventListener("mousedown", (event) => {
             NowPlayingController.startNavigation(event);
         });
     }
 
     static setState(state, value) {
         switch (state) {
+            case "offline": {
+                document.getElementById("overlayContainer").style.display = "none";
+                if (value) {
+                    NowPlayingController.controls[1].style.display = "none";
+                }
+                
+                break;
+            }
+
             case "playback": {
                 if (value) {
                     NowPlayingController.cardInterface.retrieveControls[1].firstElementChild.src = "/musix/images/musix/glyph_pause.png";

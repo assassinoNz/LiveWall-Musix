@@ -37,7 +37,7 @@
         class CardInterface {
             cardObject = null;
             title = document.querySelector("title").textContent;
-            playBackController = null;
+            playbackController = null;
             musicSourceController = null;
 
             templatesContainerFragment = document.getElementById("templateContainer").content;
@@ -58,27 +58,26 @@
 
                 //Initialize media session
                 navigator.mediaSession.setActionHandler("play", () => {
-                    this.playBackController.togglePlay();
+                    this.playbackController.togglePlay();
                 });
                 navigator.mediaSession.setActionHandler("pause", () => {
-                    this.playBackController.togglePlay();
+                    this.playbackController.togglePlay();
                 });
                 navigator.mediaSession.setActionHandler("previoustrack", () => {
-                    this.playBackController.skipTrack("previous");
+                    this.playbackController.skipTrack("previous");
                 });
                 navigator.mediaSession.setActionHandler("nexttrack", () => {
-                    this.playBackController.skipTrack("next");
+                    this.playbackController.skipTrack("next");
                 });
-
 
                 this.retrieveControls[0].addEventListener("click", (event) => {
-                    this.playBackController.skipTrack("previous");
+                    this.playbackController.skipTrack("previous");
                 });
                 this.retrieveControls[1].addEventListener("click", (event) => {
-                    this.playBackController.togglePlay();
+                    this.playbackController.togglePlay();
                 });
                 this.retrieveControls[2].addEventListener("click", (event) => {
-                    this.playBackController.skipTrack("next");
+                    this.playbackController.skipTrack("next");
                 });
                 this.retrieveControls[3].addEventListener("click", () => {
                     Utility.toggleButtonGlyph(this.retrieveControls[3]);
@@ -93,7 +92,7 @@
                 });
 
                 this.updateControls[0].addEventListener("click", (event) => {
-                    this.playBackController.toggleRemotePlay();
+                    this.playbackController.toggleRemotePlay();
                 });
 
                 const overlayContainer = document.getElementById("overlayContainer");
@@ -106,64 +105,17 @@
             }
             
             init(offline) {
-                if (offline) {
-                    this.musicSourceController.init(offline).then(() => {
-                        //Initialize static controllers
-                        ContextController.init(this, document.getElementById("contextPanel"));
-                        PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
-                        NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
-                        
-                        //Initialize playBackController
-                        this.playBackController = new PlaybackController(this, document.getElementById("mediaController"));
+                //Initialize independent static controllers
+                NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
+                ContextController.init(this, document.getElementById("contextPanel"));
 
-                        //Setup UI
-                        NowPlayingController.setState("offline", offline);
-                    });
-                } else {
-                    this.musicSourceController.init(offline).then(() => {
-                        //Initialize static controllers
-                        ContextController.init(this, document.getElementById("contextPanel"));
-                        PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
-                        NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
-
-                        //Initialize playBackController
-                        this.playBackController = new PlaybackController(this, document.getElementById("mediaController"));
-
-                        //Setup UI
-                        NowPlayingController.setState("offline", offline);
-
-                        //Initialize web-socket handlers
-                        window.socket = window.socketIo("/musix", { transports: ["websocket"], upgrade: false });
-                        //NOTE: This must be done only in online mode
-                        window.socket.on("remote-disable", (params) => {
-                            this.playBackController.setRemotePlay(false);
-                        });
-
-                        window.socket.on("remote-set-volume", (params) => {
-                            this.playBackController.setVolume(params.volume);
-                        });
-
-                        window.socket.on("remote-set-playlist", (params) => {
-                            this.playBackController.setPlaylist(params.playlist);
-                        });
-
-                        window.socket.on("remote-load-track-at", (params) => {
-                            this.playBackController.loadTrackAt(params.trackIndex, params.autoplay);
-                        });
-
-                        window.socket.on("remote-seek-to", (params) => {
-                            this.playBackController.seekTo(params.time);
-                        });
-
-                        window.socket.on("remote-toggle-play", (params) => {
-                            this.playBackController.togglePlay();
-                        });
-
-                        window.socket.on("remote-skip-track", (params) => {
-                            this.playBackController.skipTrack(params.direction);
-                        });
-                    });
-                }
+                this.musicSourceController.setOffline(offline).then(() => {
+                    //Initialize dependent static controllers
+                    PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
+                    
+                    //Initialize playbackController
+                    this.playbackController = new PlaybackController(this, document.getElementById("mediaController"));
+                });
             }
 
             getTemplate(cssQuery) {
@@ -177,7 +129,7 @@
             getController(controllerType) {
                 switch (controllerType) {
                     case "playback": {
-                        return this.playBackController;
+                        return this.playbackController;
                     }
 
                     case "musicSource": {
@@ -198,7 +150,7 @@
                 <div id="controlsContainer">
                     <div style="transform: rotate(30deg);">
                         <button>
-                            <img src="/musix/images/musix/glyph_search.png" style="transform: rotate(-30deg);" alt="">
+                            <img src="/musix/images/musix/glyph_offline.png" style="transform: rotate(-30deg);" alt="">
                         </button>
                     </div>
                     <div style="transform: rotate(50deg);">

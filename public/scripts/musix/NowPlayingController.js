@@ -34,10 +34,7 @@ export class NowPlayingController {
 
         //Add events to all controls
         NowPlayingController.controls[0].addEventListener("click", (event) => {
-            const keyword = prompt("Specify a keyword to start search");
-            if (keyword) {
-                PlaylistExplorerController.search(keyword);
-            }
+            NowPlayingController.cardInterface.getController("musicSource").toggleSource();
         });
         NowPlayingController.controls[1].addEventListener("click", (event) => {
             NowPlayingController.cardInterface.getController("playback").toggleRemotePlay();
@@ -58,9 +55,13 @@ export class NowPlayingController {
             case "offline": {
                 document.getElementById("overlayContainer").style.display = "none";
                 if (value) {
+                    NowPlayingController.controls[0].classList.add("active");
                     NowPlayingController.controls[1].style.display = "none";
+                } else {
+                    NowPlayingController.controls[0].classList.remove("active");
+                    NowPlayingController.controls[1].style.display = "initial";
                 }
-                
+
                 break;
             }
 
@@ -245,9 +246,12 @@ export class NowPlayingController {
                         }
                     };
                 } else if (differenceY < 0) {
-                    NowPlayingController.controls[2].firstElementChild.src = "";
+                    NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_search.png";
                     procedureToExecute = () => {
-
+                        const keyword = prompt("Specify a keyword to start search");
+                        if (keyword) {
+                            PlaylistExplorerController.search(keyword);
+                        }
                     };
                 }
             }

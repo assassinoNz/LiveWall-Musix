@@ -1,4 +1,5 @@
 //@ts-check
+import { NowPlayingController } from "./NowPlayingController.js";
 import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
 import { Utility } from "./Utility.js";
 
@@ -13,10 +14,15 @@ export class MusicSourceController {
         this.cardInterface = cardInterface;
     }
 
-    async init(offline) {
+    async setOffline(offline) {
         this.offline = offline;
+        NowPlayingController.setState("offline", offline);
 
         if (offline) {
+            //CASE: Prepare for offline mode
+            //Remove socket
+            window.socket = null;
+
             this.rootDirectoryHandle = await showDirectoryPicker();
 
             const playlistFileHandle = await (await this.rootDirectoryHandle.getDirectoryHandle("Registries")).getFileHandle("playlists.json");
@@ -27,7 +33,47 @@ export class MusicSourceController {
             for (let playlistIndex = 0; playlistIndex < this.playlists.length; playlistIndex++) {
                 this.playlists[playlistIndex].index = playlistIndex;
             }
+
+            return true;
         } else {
+            //CASE: Prepare for online mode
+            
+            this.rootDirectoryHandle = null;
+            if (this.latestTrackUrl) {
+                URL.revokeObjectURL(this.latestTrackUrl);
+            }
+
+            //Initialize web-socket handlers
+            window.socket = window.socketIo("/musix", { transports: ["websocket"], upgrade: false });
+            //NOTE: This must be done only in online mode
+            window.socket.on("remote-disable", (params) => {
+                this.cardInterface.getController("playback").setRemotePlay(false);
+            });
+
+            window.socket.on("remote-set-volume", (params) => {
+                this.cardInterface.getController("playback").setVolume(params.volume);
+            });
+
+            window.socket.on("remote-set-playlist", (params) => {
+                this.cardInterface.getController("playback").setPlaylist(params.playlist);
+            });
+
+            window.socket.on("remote-load-track-at", (params) => {
+                this.cardInterface.getController("playback").loadTrackAt(params.trackIndex, params.autoplay);
+            });
+
+            window.socket.on("remote-seek-to", (params) => {
+                this.cardInterface.getController("playback").seekTo(params.time);
+            });
+
+            window.socket.on("remote-toggle-play", (params) => {
+                this.cardInterface.getController("playback").togglePlay();
+            });
+
+            window.socket.on("remote-skip-track", (params) => {
+                this.cardInterface.getController("playback").skipTrack(params.direction);
+            });
+
             //Request playlist database and playlist metadata
             return fetch("/musix/playlists")
                 .then(response => response.json())
@@ -45,7 +91,18 @@ export class MusicSourceController {
                     }
                 });
         }
+    }
 
+    isOffline() {
+        return this.offline;
+    }
+
+    toggleSource() {
+        if (this.offline) {
+            this.setOffline(false);
+        } else {
+            this.setOffline(true);
+        }
     }
 
     getPlaylists() {

@@ -20,7 +20,7 @@ function main() {
     });
 
     window.socket.on("remote-load-track-at", function (params) {
-        loadTrackAt(params.trackIndex);
+        loadTrackAt(params.trackIndex, params.autoplay);
     });
 
     window.socket.on("remote-seek-to", function (params) {
@@ -42,11 +42,15 @@ function setPlaylist(playlist) {
     document.getElementById("playlistDisplay").textContent = "PLAYLIST: " + playlist.name;
 }
 
-function loadTrackAt(trackIndex) {
+function loadTrackAt(trackIndex, autoplay) {
     //NOTE: Because the current directory is http://hostname/layouts/, going to parent directory is needed to load audio files
     mediaController.src = "/musix/" + currentPlaylist.tracks[trackIndex].path;
     currentTrackIndex = trackIndex;
     document.getElementById("trackDisplay").textContent = "TRACK: " + currentPlaylist.tracks[trackIndex].title;
+
+    if (autoplay) {
+        mediaController.play();
+    }
 }
 
 function seekTo(time) {
@@ -64,16 +68,15 @@ function togglePlay() {
 function skipTrack(direction) {
     if (direction === "next") {
         if (currentTrackIndex === currentPlaylist.tracks.length - 1) {
-            loadTrackAt(0);
+            loadTrackAt(0, true);
         } else {
-            loadTrackAt(currentTrackIndex + 1);
+            loadTrackAt(currentTrackIndex + 1, true);
         }
     } else if (direction === "previous") {
         if (currentTrackIndex === 0) {
-            loadTrackAt(currentPlaylist.tracks.length - 1);
+            loadTrackAt(currentPlaylist.tracks.length - 1, true);
         } else {
-            loadTrackAt(currentTrackIndex - 1);
+            loadTrackAt(currentTrackIndex - 1, true);
         }
     }
-    togglePlay();
 }

@@ -51,6 +51,7 @@ export class PlaybackController {
         //Add onplay to mediaController for displaying current state on navigationControl
         this.mediaController.addEventListener("play", () => {
             NowPlayingController.setState("playback", true);
+            navigator.mediaSession.playbackState = "playing";
         });
         //Add ontimeupdate to mediaController for updating state and UI
         this.mediaController.addEventListener("timeupdate", this.boundedHandlers.handleTimeUpdate);
@@ -63,6 +64,7 @@ export class PlaybackController {
         //Add onplay to mediaController for displaying current state on navigationControl
         this.mediaController.addEventListener("pause", () => {
             NowPlayingController.setState("playback", false);
+            navigator.mediaSession.playbackState = "paused";
         });
         //Add onended to mediaController for playing next track
         this.mediaController.addEventListener("ended", () => {
@@ -171,7 +173,7 @@ export class PlaybackController {
             this.mediaController.currentTime = 0;
 
             if (autoplay) {
-                this.togglePlay();
+                this.mediaController.play();
             }
         });
 
@@ -220,14 +222,12 @@ export class PlaybackController {
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-toggle-play"
             });
+        }
+
+        if (this.mediaController.paused) {
+            this.mediaController.play();
         } else {
-            if (this.mediaController.paused) {
-                this.mediaController.play();
-                navigator.mediaSession.playbackState = "playing";
-            } else {
-                this.mediaController.pause();
-                navigator.mediaSession.playbackState = "paused";
-            }
+            this.mediaController.pause();
         }
     }
 
@@ -236,26 +236,7 @@ export class PlaybackController {
         const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
 
         this.setPlaylist(playlist);
-
-        if (this.remotePlay) {
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-set-playlist",
-                playlist: playlist
-            });
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-load-track-at",
-                trackIndex: upcomingTrackPosition.trackIndex
-            });
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-toggle-play",
-                trackIndex: upcomingTrackPosition.trackIndex
-            });
-            //NOTE: Plying the song immediately must only be done only when not in a remote play session
-            this.loadTrackAt(upcomingTrackPosition.trackIndex, false);
-        } else {
-            //NOTE: Plying the song immediately must only be done only when not in a remote play session
-            this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
-        }
+        this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
     }
 
     //EVENT HANDLER METHODS
@@ -269,20 +250,9 @@ export class PlaybackController {
             const seekedTime = Utility.formatTime(Utility.getCircularSliderValue(NowPlayingController.seekSlider, 196.5, 343.5, this.mediaController.duration));
             NowPlayingController.updateViewSection("time", seekedTime);
         }, () => {
-            //NOTE: We have to check is RemotePlay enabled
-            if (this.remotePlay) {
-                //NOTE: Only broadcasting the params is enough. No need to update our client
-                //Get sliderValue
-                const seekedTime = Utility.getCircularSliderValue(NowPlayingController.seekSlider, 196.5, 343.5, this.mediaController.duration);
-                this.seekTo(seekedTime);
-            } else {
-                //Get sliderValue
-                const seekedTime = Utility.getCircularSliderValue(NowPlayingController.seekSlider, 196.5, 343.5, this.mediaController.duration);
-                //Set mediaController's currentTime to match seekedTime
-                this.mediaController.currentTime = seekedTime;
-                //Reinstate removed ontimeupdate of mediaController
-                this.mediaController.addEventListener("timeupdate", this.boundedHandlers.handleTimeUpdate);
-            }
+            const seekedTime = Utility.getCircularSliderValue(NowPlayingController.seekSlider, 196.5, 343.5, this.mediaController.duration);
+            this.seekTo(seekedTime);
+            this.mediaController.addEventListener("timeupdate", this.boundedHandlers.handleTimeUpdate);
         });
     }
 

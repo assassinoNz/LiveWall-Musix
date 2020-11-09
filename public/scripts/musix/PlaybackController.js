@@ -247,9 +247,12 @@ export class PlaybackController {
 
     skipTrack(direction) {
         const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
-        const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
+        
+        if (this.playlist.index !== upcomingTrackPosition.playlistIndex) {
+            const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
+            this.setPlaylist(playlist);
+        }
 
-        this.setPlaylist(playlist);
         this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
     }
 

@@ -79,13 +79,15 @@ export class PlaybackController {
 
     setRemotePlay(remotePlay) {
         this.remotePlay = remotePlay;
-        NowPlayingController.setState("remotePlay", remotePlay);
-
+        
         if (remotePlay) {
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-disable"
             });
         }
+
+        //Update UI
+        NowPlayingController.setState("remotePlay", remotePlay);
     }
 
     isRemotePlay() {
@@ -114,8 +116,10 @@ export class PlaybackController {
             });
         }
         this.mediaController.volume = volume;
+
         //Update playback state
         localStorage.setItem("currentVolume", volume.toString());
+
         //Update UI
         NowPlayingController.updateViewSection("volume", volume);
     }
@@ -128,8 +132,15 @@ export class PlaybackController {
             });
         }
         this.playlist = playlist;
+
         //Update playback state
         localStorage.setItem("currentPlaylistIndex", playlist.index.toString());
+
+        //Update media session
+        navigator.mediaSession.metadata.artwork = [
+            { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
+        ];
+
         //Update UI
         NowPlayingController.updateViewSection("playlist", playlist);
     }
@@ -177,17 +188,11 @@ export class PlaybackController {
             }
         });
 
-        //Update playback state
-        localStorage.setItem("currentTrackIndex", trackIndex.toString());
-
-        //Update UI
+        //Calculate media metadata
         const mediaMetadata = {
             title: track.title,
             artist: track.artist,
-            album: this.playlist.name,
-            artwork: [
-                { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
-            ]
+            album: this.playlist.name
         };
 
         if (track.artist) {
@@ -202,6 +207,15 @@ export class PlaybackController {
             mediaMetadata.title = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."));
         }
 
+        //Update playback state
+        localStorage.setItem("currentTrackIndex", trackIndex.toString());
+
+        //Update media session
+        navigator.mediaSession.metadata.title = mediaMetadata.title;
+        navigator.mediaSession.metadata.artist = mediaMetadata.artist;
+        navigator.mediaSession.metadata.album = mediaMetadata.album;
+
+        //Update UI
         NowPlayingController.updateViewSection("track", mediaMetadata);
     }
 

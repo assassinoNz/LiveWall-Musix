@@ -109,9 +109,6 @@ export class NowPlayingController {
                 NowPlayingController.view.querySelector("#artistDisplay").textContent = value.artist;
                 NowPlayingController.view.querySelector("#titleDisplay").textContent = value.title;
 
-                //Update media session metadata
-                navigator.mediaSession.metadata = new MediaMetadata(value);
-
                 break;
             }
 

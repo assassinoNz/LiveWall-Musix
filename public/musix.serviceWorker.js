@@ -10,14 +10,17 @@ self.addEventListener("install", (event) => {
     console.log("ServiceWorker installation successful");
 });
 
-self.addEventListener("activate", async (event) => {
-    const keys = await caches.keys();
-    keys.map((key) => {
-        if (key !== cacheName) {
-            return caches.delete(key);
+self.addEventListener("activate", (event) => {
+    caches.keys().then((keys) => {
+        for (const key of keys) {
+            if (key !== cacheName) {
+                caches.delete(key);
+                break;
+            }
         }
+        
+        console.log("ServiceWorker activation successful");
     });
-    console.log("ServiceWorker activation successful");
 });
 
 self.addEventListener("fetch", (event) => {

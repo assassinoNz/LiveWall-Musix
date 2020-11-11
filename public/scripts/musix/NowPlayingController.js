@@ -23,12 +23,12 @@ export class NowPlayingController {
         //Add onpointerdown to volumeSlider for changing volume
         //NOTE: Changing volume is done in realtime except in RemotePlay
         NowPlayingController.volumeSlider.addEventListener("pointerdown", (event) => {
-            NowPlayingController.startSlide(event, 70.5, 221.8, null, () => {
+            NowPlayingController.startSlide(event, null, () => {
                 if (!NowPlayingController.cardInterface.getController("playback").isRemotePlay()) {
-                    NowPlayingController.cardInterface.getController("playback").setVolume(Utility.getCircularSliderValue(NowPlayingController.volumeSlider, 70.5, 221.8, 1));
+                    NowPlayingController.cardInterface.getController("playback").setVolume(Utility.getCircularSliderValue(NowPlayingController.volumeSlider, 1));
                 }
             }, () => {
-                NowPlayingController.cardInterface.getController("playback").setVolume(Utility.getCircularSliderValue(NowPlayingController.volumeSlider, 70.5, 221.8, 1));
+                NowPlayingController.cardInterface.getController("playback").setVolume(Utility.getCircularSliderValue(NowPlayingController.volumeSlider, 1));
             });
         });
 
@@ -95,7 +95,7 @@ export class NowPlayingController {
         switch (section) {
             case "volume": {
                 NowPlayingController.playTimeDisplays[2].textContent = Math.round(value * 100).toString();
-                Utility.setCircularSliderView(NowPlayingController.volumeSlider, 70.5, 221.8, 1, value);
+                Utility.setCircularSliderView(NowPlayingController.volumeSlider, value);
                 break;
             }
 
@@ -113,9 +113,7 @@ export class NowPlayingController {
             }
 
             case "seek": {
-                Utility.setCircularSliderView(NowPlayingController.seekSlider, 196.5, 343.5, value[0], value[1]);
-                NowPlayingController.playTimeDisplays[0].textContent = value[2];
-                NowPlayingController.playTimeDisplays[1].textContent = value[3];
+                Utility.setCircularSliderView(NowPlayingController.seekSlider, value[0], value[1]);
                 break;
             }
 
@@ -128,9 +126,12 @@ export class NowPlayingController {
 
     }
 
-    static startSlide(event, startTheta, endTheta, executeBeforeDoSlide, executeWithDoSlide, executeAfterDoSlide) {
+    static startSlide(event, executeBeforeDoSlide, executeWithDoSlide, executeAfterDoSlide) {
         //Get a reference of "event.currentTarget" for inner functions
         const slider = event.currentTarget;
+        const startTheta = Number.parseFloat(slider.dataset.startTheta);
+        const endTheta = Number.parseFloat(slider.dataset.endTheta);
+        console.log(startTheta, endTheta);
         //Get the boundary of the slider
         const sliderRect = slider.getBoundingClientRect();
         //Calculate slider's center using sliderTrackPosition

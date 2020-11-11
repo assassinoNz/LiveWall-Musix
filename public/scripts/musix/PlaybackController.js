@@ -41,12 +41,10 @@ export class PlaybackController {
         this.mediaController.addEventListener("loadstart", () => {
             //Remove ability to seek
             NowPlayingController.seekSlider.removeEventListener("pointerdown", this.boundedHandlers.startSeek);
-            NowPlayingController.seekSlider.removeEventListener("touchstart", this.boundedHandlers.startSeek);
         });
         this.mediaController.addEventListener("canplay", () => {
             //Add ability to seek
             NowPlayingController.seekSlider.addEventListener("pointerdown", this.boundedHandlers.startSeek);
-            NowPlayingController.seekSlider.addEventListener("touchstart", this.boundedHandlers.startSeek);
         });
         //Add onplay to mediaController for displaying current state on navigationControl
         this.mediaController.addEventListener("play", () => {
@@ -59,7 +57,6 @@ export class PlaybackController {
         this.mediaController.addEventListener("waiting", () => {
             //Remove ability to seek
             NowPlayingController.seekSlider.removeEventListener("pointerdown", this.boundedHandlers.startSeek);
-            NowPlayingController.seekSlider.removeEventListener("touchstart", this.boundedHandlers.startSeek);
         });
         //Add onplay to mediaController for displaying current state on navigationControl
         this.mediaController.addEventListener("pause", () => {
@@ -265,15 +262,15 @@ export class PlaybackController {
     //EVENT HANDLER METHODS
     startSeek(event) {
         //NOTE: Seek isn't done in realtime. It is done as soon as the user leaves the seekSlider
-        NowPlayingController.startSlide(event, 196.5, 343.5, () => {
+        NowPlayingController.startSlide(event, () => {
             //Remove ontimeupdate from mediaController
             this.mediaController.removeEventListener("timeupdate", this.boundedHandlers.handleTimeUpdate);
         }, () => {
             //Update the seeked time
-            const seekedTime = Utility.formatTime(Utility.getCircularSliderValue(NowPlayingController.seekSlider, 196.5, 343.5, this.mediaController.duration));
+            const seekedTime = Utility.formatTime(Utility.getCircularSliderValue(NowPlayingController.seekSlider, this.mediaController.duration));
             NowPlayingController.updateViewSection("time", seekedTime);
         }, () => {
-            const seekedTime = Utility.getCircularSliderValue(NowPlayingController.seekSlider, 196.5, 343.5, this.mediaController.duration);
+            const seekedTime = Utility.getCircularSliderValue(NowPlayingController.seekSlider, this.mediaController.duration);
             this.seekTo(seekedTime);
             this.mediaController.addEventListener("timeupdate", this.boundedHandlers.handleTimeUpdate);
         });
@@ -281,7 +278,7 @@ export class PlaybackController {
 
     handleTimeUpdate() {
         //Update UI
-        const elapsedTime = Utility.formatTime(this.mediaController.currentTime);
-        NowPlayingController.updateViewSection("seek", [this.mediaController.duration, this.mediaController.currentTime, elapsedTime[0], elapsedTime[1]]);
+        NowPlayingController.updateViewSection("seek", [this.mediaController.duration, this.mediaController.currentTime]);
+        NowPlayingController.updateViewSection("time", Utility.formatTime(this.mediaController.currentTime));
     }
 }

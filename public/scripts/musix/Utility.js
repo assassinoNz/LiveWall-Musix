@@ -1,6 +1,8 @@
 //@ts-check
 export class Utility {
-    static getCircularSliderValue(slider, startTheta, endTheta, rangeUpperLimit) {
+    static getCircularSliderValue(slider, rangeUpperLimit) {
+        const startTheta = Number.parseFloat(slider.dataset.startTheta);
+        const endTheta = Number.parseFloat(slider.dataset.endTheta);
         //Get sliderValue as theta
         const thetaString = slider.style.transform;
         const theta = thetaString.slice(7, thetaString.length - 4);
@@ -11,7 +13,9 @@ export class Utility {
         return currentSeekedValue;
     }
 
-    static setCircularSliderView(slider, startTheta, endTheta, rangeUpperLimit, value) {
+    static setCircularSliderView(slider, rangeUpperLimit, value) {
+        const startTheta = Number.parseFloat(slider.dataset.startTheta);
+        const endTheta = Number.parseFloat(slider.dataset.endTheta);
         //Calculate the size of a single unit (seconds per degree)
         const unit = rangeUpperLimit / (endTheta - startTheta);
         //Calculate theta using currentTime

@@ -20,8 +20,10 @@ export class MusicSourceController {
 
         if (offline) {
             //CASE: Prepare for offline mode
-            //Remove socket
-            window.socket = null;
+            if ("socket" in window) {
+                //CASE: A socket is already established and is connected
+                window.socket.disconnect();
+            }
 
             this.rootDirectoryHandle = await showDirectoryPicker();
 
@@ -37,42 +39,53 @@ export class MusicSourceController {
             return true;
         } else {
             //CASE: Prepare for online mode
+            if ("socket" in window) {
+                //CASE: A socket is already established and is disconnected
+                window.socket.connect();
+            } else {
+                //CASE: No socket established
+                //Initialize a new socket with the server
+                window.socket = window.io("/musix", { transports: ["websocket"], upgrade: false });
+
+                //Initialize web-socket handlers
+                window.socket.on("remote-disable", (params) => {
+                    this.cardInterface.getController("playback").setRemotePlay(false);
+                });
+
+                window.socket.on("remote-set-volume", (params) => {
+                    this.cardInterface.getController("playback").setVolume(params.volume);
+                });
+
+                window.socket.on("remote-set-playlist", (params) => {
+                    this.cardInterface.getController("playback").setPlaylist(params.playlist);
+                });
+
+                window.socket.on("remote-load-track-at", (params) => {
+                    this.cardInterface.getController("playback").loadTrackAt(params.trackIndex, params.autoplay);
+                });
+
+                window.socket.on("remote-seek-to", (params) => {
+                    this.cardInterface.getController("playback").seekTo(params.time);
+                });
+
+                window.socket.on("remote-toggle-play", (params) => {
+                    this.cardInterface.getController("playback").togglePlay();
+                });
+
+                window.socket.on("remote-skip-track", (params) => {
+                    this.cardInterface.getController("playback").skipTrack(params.direction);
+                });
+            }
             
             this.rootDirectoryHandle = null;
             if (this.latestTrackUrl) {
                 URL.revokeObjectURL(this.latestTrackUrl);
             }
 
-            //Initialize web-socket handlers
-            window.socket = window.socketIo("/musix", { transports: ["websocket"], upgrade: false });
+            
+            
             //NOTE: This must be done only in online mode
-            window.socket.on("remote-disable", (params) => {
-                this.cardInterface.getController("playback").setRemotePlay(false);
-            });
-
-            window.socket.on("remote-set-volume", (params) => {
-                this.cardInterface.getController("playback").setVolume(params.volume);
-            });
-
-            window.socket.on("remote-set-playlist", (params) => {
-                this.cardInterface.getController("playback").setPlaylist(params.playlist);
-            });
-
-            window.socket.on("remote-load-track-at", (params) => {
-                this.cardInterface.getController("playback").loadTrackAt(params.trackIndex, params.autoplay);
-            });
-
-            window.socket.on("remote-seek-to", (params) => {
-                this.cardInterface.getController("playback").seekTo(params.time);
-            });
-
-            window.socket.on("remote-toggle-play", (params) => {
-                this.cardInterface.getController("playback").togglePlay();
-            });
-
-            window.socket.on("remote-skip-track", (params) => {
-                this.cardInterface.getController("playback").skipTrack(params.direction);
-            });
+            
 
             //Request playlist database and playlist metadata
             return fetch("/musix/playlists")

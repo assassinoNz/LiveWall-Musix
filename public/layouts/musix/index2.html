@@ -73,6 +73,9 @@
                 navigator.mediaSession.setActionHandler("nexttrack", () => {
                     this.playbackController.skipTrack("next");
                 });
+                navigator.mediaSession.setActionHandler("seekto", (details) => {
+                    this.playbackController.seekTo(details.seekTime);
+                });
 
                 this.retrieveControls[0].addEventListener("click", (event) => {
                     this.playbackController.skipTrack("previous");

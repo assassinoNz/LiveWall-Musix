@@ -1,5 +1,5 @@
 //@ts-check
-const cacheName = "musixV2";
+const cacheName = "musixV3";
 const nonCachableURLSegments = [
     "/musix/playlists",
     "/musix/lyrics",
@@ -15,7 +15,6 @@ self.addEventListener("activate", (event) => {
         for (const key of keys) {
             if (key !== cacheName) {
                 caches.delete(key);
-                break;
             }
         }
         

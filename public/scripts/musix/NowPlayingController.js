@@ -131,7 +131,6 @@ export class NowPlayingController {
         const slider = event.currentTarget;
         const startTheta = Number.parseFloat(slider.dataset.startTheta);
         const endTheta = Number.parseFloat(slider.dataset.endTheta);
-        console.log(startTheta, endTheta);
         //Get the boundary of the slider
         const sliderRect = slider.getBoundingClientRect();
         //Calculate slider's center using sliderTrackPosition

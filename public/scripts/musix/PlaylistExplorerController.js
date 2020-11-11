@@ -68,7 +68,7 @@ export class PlaylistExplorerController {
     static createPlaylistView(playlist) {
         const playlistView = PlaylistExplorerController.playlistViewTemplate.cloneNode(true);
         playlistView.firstElementChild.firstElementChild.textContent = playlist.name;
-        playlistView.firstElementChild.firstElementChild.style.color = playlist.themeColor;
+        // playlistView.firstElementChild.firstElementChild.style.color = playlist.themeColor;
         playlistView.firstElementChild.firstElementChild.addEventListener("click", () => {
             playlistView.children[1].classList.toggle("inactive");
         });

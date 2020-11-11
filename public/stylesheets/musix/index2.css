@@ -441,7 +441,7 @@ body {
     height: 100%;
     width: 100%;
 
-    background-color: black;
+    background-color: var(--primaryColor);
 
     z-index: 3;
 }
@@ -451,10 +451,12 @@ body {
     height: 25vw;
     width: 25vw;
     
-    background-color: var(--tertiaryColor);
+    background-color: var(--primaryColor);
     box-shadow: 0 0 10px var(--themeColor);
     border: solid var(--secondaryColor);
     border-width: 2px 2px 2px 2px;
     border-radius: 50%;
     outline: none;
+
+    color: var(--negativeColor);
 }

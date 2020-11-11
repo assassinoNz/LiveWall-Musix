@@ -10,8 +10,28 @@
 
 :root {
     --themeColor: darkcyan;
-    --secondaryColor: rgb(100, 100, 100);
-    --tertiaryColor: rgb(20, 20, 20);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primaryColor: black;
+        --negativeColor: white;
+        --secondaryColor: rgb(100, 100, 100);
+        --tertiaryColor: rgb(20, 20, 20);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --primaryColor: white;
+        --negativeColor: black;
+        --secondaryColor: rgb(140, 140, 140);
+        --tertiaryColor: rgb(225, 225, 225);
+    }
+
+    button>img {
+        filter: invert();
+    }
 }
 
 * {
@@ -84,7 +104,7 @@ body {
     height: 100%;
     width: 100%;
 
-    background-color: black;
+    background-color: var(--primaryColor);
 
     animation-duration: 0.5s;
 }
@@ -155,7 +175,7 @@ body {
 }
 
 #controlsContainer > div > button.active {
-    box-shadow: 0 0 10px var(--themeColor), inset 0 0 10px white;
+    box-shadow: 0 0 10px var(--themeColor), inset 0 0 10px var(--negativeColor);
 }
 
 .slider {

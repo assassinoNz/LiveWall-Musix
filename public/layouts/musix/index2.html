@@ -31,6 +31,22 @@
             window.cardInterface = new CardInterface();
         });
 
+        window.addEventListener("resize", () => {
+            const seekSlider = document.getElementById("seekSlider");
+            const volumeSlider = document.getElementById("volumeSlider");
+            if (window.innerHeight < window.innerWidth) {
+                seekSlider.dataset.startTheta = "0";
+                seekSlider.dataset.endTheta = "360";
+                volumeSlider.dataset.startTheta = "0";
+                volumeSlider.dataset.endTheta = "360";
+            } else {
+                seekSlider.dataset.startTheta = "196.5";
+                seekSlider.dataset.endTheta = "343.5";
+                volumeSlider.dataset.startTheta = "70.5";
+                volumeSlider.dataset.endTheta = "221.8";
+            }
+        });
+
         class CardInterface {
             cardObject = null;
             title = document.querySelector("title").textContent;

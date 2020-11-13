@@ -67,6 +67,7 @@ export class PlaylistExplorerController {
 
     static createPlaylistView(playlist) {
         const playlistView = PlaylistExplorerController.playlistViewTemplate.cloneNode(true);
+        playlistView.removeAttribute("id");
         playlistView.firstElementChild.firstElementChild.textContent = playlist.name;
         // playlistView.firstElementChild.firstElementChild.style.color = playlist.themeColor;
         playlistView.firstElementChild.firstElementChild.addEventListener("click", () => {
@@ -90,6 +91,7 @@ export class PlaylistExplorerController {
     static createTrackView(trackPosition) {
         const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
         const trackView = PlaylistExplorerController.trackViewTemplate.cloneNode(true);
+        trackView.removeAttribute("id");
         if (playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title) {
             trackView.textContent = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title;
         } else {

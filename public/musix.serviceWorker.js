@@ -1,5 +1,5 @@
 //@ts-check
-const cacheName = "musixV3";
+const cacheName = "musixV4";
 const nonCachableURLSegments = [
     "/musix/playlists",
     "/musix/lyrics",

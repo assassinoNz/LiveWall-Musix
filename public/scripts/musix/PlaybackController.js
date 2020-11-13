@@ -86,7 +86,7 @@ export class PlaybackController {
         //Update UI
         NowPlayingController.setState("remotePlay", remotePlay);
 
-        navigator.vibrate(1000);
+        navigator.vibrate(500);
     }
 
     isRemotePlay() {
@@ -243,7 +243,7 @@ export class PlaybackController {
             this.mediaController.pause();
         }
 
-        navigator.vibrate(200);
+        navigator.vibrate(100);
     }
 
     skipTrack(direction) {
@@ -256,7 +256,7 @@ export class PlaybackController {
 
         this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
 
-        navigator.vibrate(200);
+        navigator.vibrate(100);
     }
 
     //EVENT HANDLER METHODS

@@ -460,3 +460,79 @@ body {
 
     color: var(--negativeColor);
 }
+
+@media (orientation: landscape) {
+    #controlsContainer {
+        left: auto;
+    }
+
+    #seekSlider {
+        left: auto;
+
+        height: 60vh;
+        width: 60vh;
+    }
+
+    .playTimeDisplay {
+        left: auto;
+    }
+
+    #volumeSlider {
+        bottom: auto;
+        right: 100px;
+
+        height: 25vh;
+        width: 25vh;
+    }
+
+    #displayContainer {
+        position: absolute;
+        bottom: auto;
+        right: auto;
+        left: 0;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        height: 100%;
+        width: 30%;
+    
+        transform: rotate(0deg);
+    }
+    
+    #displayContainer > p {
+        text-align: right;
+    }
+
+    #panelContainer {
+        position: absolute;
+        left: 0;
+    
+        width: 30%;
+        height: 100%;
+    }
+
+    @keyframes popInPanelContainer {
+        0% {
+            opacity: 0;
+            transform: translateX(-20vh);
+        }
+    }
+    
+    @keyframes popOutPanelContainer {
+        100% {
+            opacity: 0;
+            transform: translateX(-20vh);
+            visibility: hidden;
+        }
+    }
+
+    .panel {
+        background-color: var(--primaryColor);
+    }
+
+    .panelDivisionSectorItem {
+        color: var(--negativeColor);
+    }
+}

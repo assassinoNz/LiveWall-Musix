@@ -120,7 +120,7 @@ export class PlaybackController {
         localStorage.setItem("currentVolume", volume.toString());
 
         //Update UI
-        NowPlayingController.updateViewSection("volume", volume);
+        NowPlayingController.updateViewSection("volume", [1, volume]);
     }
 
     setPlaylist(playlist) {

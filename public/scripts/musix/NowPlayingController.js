@@ -94,8 +94,8 @@ export class NowPlayingController {
     static updateViewSection(section, value) {
         switch (section) {
             case "volume": {
-                NowPlayingController.playTimeDisplays[2].textContent = Math.round(value * 100).toString();
-                Utility.setCircularSliderView(NowPlayingController.volumeSlider, value);
+                NowPlayingController.playTimeDisplays[2].textContent = Math.round(value[1] * 100).toString();
+                Utility.setCircularSliderView(NowPlayingController.volumeSlider, value[0], value[1]);
                 break;
             }
 

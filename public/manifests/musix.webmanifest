@@ -5,7 +5,7 @@
   "start_url": "/musix/",
   "background_color": "black",
   "display": "fullscreen",
-  "orientation": "portrait-primary",
+  "orientation": "natural",
   "icons": [
     {
       "src": "/musix/images/musix/launcher_192.png",

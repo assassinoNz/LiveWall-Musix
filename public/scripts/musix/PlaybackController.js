@@ -146,7 +146,11 @@ export class PlaybackController {
     }
 
     setPlayback(playback) {
-        if (this.remotePlay) {
+        if (this.remotePlay && this.mute) {
+            this.cardInterface.getWebSocket().emit("broadcast-event", {
+                eventName: "remote-toggle-play"
+            });
+        } else if (this.remotePlay) {
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-set-playback",
                 playback: playback
@@ -172,18 +176,22 @@ export class PlaybackController {
                 playlist: playlist
             });
         }
-        this.playlist = playlist;
 
-        //Update playback state
-        localStorage.setItem("currentPlaylistIndex", playlist.index.toString());
-
-        //Update media session
-        navigator.mediaSession.metadata.artwork = [
-            { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
-        ];
-
-        //Update UI
-        NowPlayingController.updateViewSection("playlist", playlist);
+        //NOTE: Setting playlist locally won't work when mute mode is active
+        if (!this.mute) {
+            this.playlist = playlist;
+    
+            //Update playback state
+            localStorage.setItem("currentPlaylistIndex", playlist.index.toString());
+    
+            //Update media session
+            navigator.mediaSession.metadata.artwork = [
+                { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
+            ];
+    
+            //Update UI
+            NowPlayingController.updateViewSection("playlist", playlist);
+        }
     }
 
     loadTrackAt(trackIndex, autoplay) {
@@ -264,7 +272,7 @@ export class PlaybackController {
     }
 
     seekTo(time) {
-        if (this.remotePlay) {
+        if (this.remotePlay && !this.mute) {
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-seek-to",
                 time: time
@@ -276,31 +284,31 @@ export class PlaybackController {
     }
 
     togglePlay() {
-        //NOTE: Since setPlayback wont work when mute mode is active, the toggle-playback event must be used
-        if (this.remotePlay && this.mute) {
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-toggle-play",
-            });
+        if (this.mediaController.paused) {
+            this.setPlayback(true);
         } else {
-            if (this.mediaController.paused) {
-                this.setPlayback(true);
-            } else {
-                this.setPlayback(false);
-            }
+            this.setPlayback(false);
         }
     }
 
     skipTrack(direction) {
-        const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
-
-        if (this.playlist.index !== upcomingTrackPosition.playlistIndex) {
-            const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
-            this.setPlaylist(playlist);
+        if (this.remotePlay && this.mute) {
+            this.cardInterface.getWebSocket().emit("broadcast-event", {
+                eventName: "remote-skip-track",
+                direction: direction
+            });
+        } else {
+            const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
+    
+            if (this.playlist.index !== upcomingTrackPosition.playlistIndex) {
+                const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
+                this.setPlaylist(playlist);
+            }
+    
+            this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
+    
+            navigator.vibrate(50);
         }
-
-        this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
-
-        navigator.vibrate(50);
     }
 
     //EVENT HANDLER METHODS

@@ -64,6 +64,10 @@ export class MusicSourceController {
                     this.cardInterface.getController("playback").loadTrackAt(params.trackIndex, params.autoplay);
                 });
 
+                window.socket.on("remote-skip-track", (params) => {
+                    this.cardInterface.getController("playback").skipTrack(params.direction);
+                });
+
                 window.socket.on("remote-seek-to", (params) => {
                     this.cardInterface.getController("playback").seekTo(params.time);
                 });
@@ -74,10 +78,6 @@ export class MusicSourceController {
 
                 window.socket.on("remote-toggle-play", (params) => {
                     this.cardInterface.getController("playback").togglePlay();
-                });
-
-                window.socket.on("remote-skip-track", (params) => {
-                    this.cardInterface.getController("playback").skipTrack(params.direction);
                 });
             }
 

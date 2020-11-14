@@ -76,7 +76,7 @@ export class PlaybackController {
 
     setRemotePlay(remotePlay) {
         this.remotePlay = remotePlay;
-        
+
         if (remotePlay) {
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-disable"
@@ -121,6 +121,24 @@ export class PlaybackController {
 
         //Update UI
         NowPlayingController.updateViewSection("volume", [1, volume]);
+    }
+
+    setPlayback(playback) {
+        if (this.remotePlay) {
+            this.cardInterface.getWebSocket().emit("broadcast-event", {
+                eventName: "remote-set-playback",
+                playback: playback
+            });
+        }
+
+        if (playback === true && this.mediaController.paused) {
+            this.mediaController.play();
+            navigator.vibrate(50);
+        } else if (playback === false && !this.mediaController.paused) {
+            this.mediaController.pause();
+            navigator.vibrate(50);
+        }
+
     }
 
     setPlaylist(playlist) {
@@ -231,24 +249,16 @@ export class PlaybackController {
     }
 
     togglePlay() {
-        if (this.remotePlay) {
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-toggle-play"
-            });
-        }
-
         if (this.mediaController.paused) {
-            this.mediaController.play();
+            this.setPlayback(true);
         } else {
-            this.mediaController.pause();
+            this.setPlayback(false);
         }
-
-        navigator.vibrate(50);
     }
 
     skipTrack(direction) {
         const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
-        
+
         if (this.playlist.index !== upcomingTrackPosition.playlistIndex) {
             const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
             this.setPlaylist(playlist);

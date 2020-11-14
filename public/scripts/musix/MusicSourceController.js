@@ -68,8 +68,8 @@ export class MusicSourceController {
                     this.cardInterface.getController("playback").seekTo(params.time);
                 });
 
-                window.socket.on("remote-toggle-play", (params) => {
-                    this.cardInterface.getController("playback").togglePlay();
+                window.socket.on("remote-set-playback", (params) => {
+                    this.cardInterface.getController("playback").setPlayback(params.playback);
                 });
 
                 window.socket.on("remote-skip-track", (params) => {
@@ -260,8 +260,6 @@ export class MusicSourceController {
 
         return possibleTrackPosition;
     }
-
-
 
     appendPlaylist(playlist) {
         const assignedPlaylistIndex = this.playlists.push(playlist) - 1;

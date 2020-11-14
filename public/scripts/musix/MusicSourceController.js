@@ -72,6 +72,10 @@ export class MusicSourceController {
                     this.cardInterface.getController("playback").setPlayback(params.playback);
                 });
 
+                window.socket.on("remote-toggle-play", (params) => {
+                    this.cardInterface.getController("playback").togglePlay();
+                });
+
                 window.socket.on("remote-skip-track", (params) => {
                     this.cardInterface.getController("playback").skipTrack(params.direction);
                 });

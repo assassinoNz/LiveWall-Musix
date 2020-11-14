@@ -153,7 +153,7 @@ export class PlaybackController {
             });
         }
 
-        //NOTE: Setting playback locally won't work when mute mode  is active
+        //NOTE: Setting playback locally won't work when mute mode is active
         if (!this.mute) {
             if (playback === true && this.mediaController.paused) {
                 this.mediaController.play();
@@ -276,10 +276,17 @@ export class PlaybackController {
     }
 
     togglePlay() {
-        if (this.mediaController.paused) {
-            this.setPlayback(true);
+        //NOTE: Since setPlayback wont work when mute mode is active, the toggle-playback event must be used
+        if (this.remotePlay && this.mute) {
+            this.cardInterface.getWebSocket().emit("broadcast-event", {
+                eventName: "remote-toggle-play",
+            });
         } else {
-            this.setPlayback(false);
+            if (this.mediaController.paused) {
+                this.setPlayback(true);
+            } else {
+                this.setPlayback(false);
+            }
         }
     }
 

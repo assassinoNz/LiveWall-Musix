@@ -27,8 +27,8 @@ function main() {
         seekTo(params.time);
     });
 
-    window.socket.on("remote-toggle-play", function (params) {
-        togglePlay();
+    window.socket.on("remote-set-playback", function (params) {
+        setPlayback(params.playback);
     });
 }
 
@@ -57,8 +57,8 @@ function seekTo(time) {
     mediaController.currentTime = time;
 }
 
-function togglePlay() {
-    if (mediaController.paused) {
+function setPlayback(playback) {
+    if (playback) {
         mediaController.play();
     } else {
         mediaController.pause();

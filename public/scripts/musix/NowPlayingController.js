@@ -21,7 +21,7 @@ export class NowPlayingController {
         NowPlayingController.controls = NowPlayingController.view.querySelectorAll("#controlsContainer>div>button");
 
         //Add onclick to volumeSlider for toggling mute mode
-        NowPlayingController.volumeSlider.addEventListener("dblclick", (event) => {
+        NowPlayingController.volumeSlider.addEventListener("contextmenu", (event) => {
             NowPlayingController.cardInterface.getController("playback").toggleMute();
         });
         //Add onpointerdown to volumeSlider for changing volume

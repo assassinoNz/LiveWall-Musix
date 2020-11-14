@@ -24,6 +24,24 @@ export class Utility {
         slider.style.transform = `rotate(${startTheta+theta}deg)`;
     }
 
+    static findFirstNonNullIndex(array, forwards, lowerIndex, upperIndex) {
+        if(forwards) {
+            for (let i = lowerIndex; i <= upperIndex; i++) {
+                if (array[i] !== null) {
+                    return i;
+                }
+            }
+        } else {
+            for (let i = upperIndex; i >= lowerIndex; i--) {
+                if (array[i] !== null) {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
     static formatTime(totalSeconds) {
         //Calculate time to HH:MM:SS format
         const minutesAsFraction = totalSeconds / 60;

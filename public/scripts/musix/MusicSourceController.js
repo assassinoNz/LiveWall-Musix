@@ -171,61 +171,39 @@ export class MusicSourceController {
 
     queryRelativePlaylistPosition(relativity) {
         const currentPlaylistIndex = parseInt(localStorage.getItem("currentPlaylistIndex"));
+
+        let possiblePlaylistIndex = -1;
+
         if (relativity === "next") {
             if (currentPlaylistIndex === this.playlists.length - 1) {
                 //CASE: Current playlist is the final playlist
-                //Traverse playlists forwards from beginning
-                for (let i = 0; i < this.playlists.length; i++) {
-                    if (this.playlists[i] !== null) {
-                        return i;
-                    }
-                }
+                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, true, 0, this.playlists.length - 1);
             } else {
                 //CASE: Current playlist is the not the final playlist
-                //Traverse playlists forwards from current playlist to the end
-                for (let i = currentPlaylistIndex + 1; i < this.playlists.length; i++) {
-                    if (this.playlists[i] !== null) {
-                        return i;
-                    }
-                }
-                
-                //CASE: Still no playlist is found
-                //Traverse playlists forwards from beginning until current playlist index
-                for (let i = 0; i < currentPlaylistIndex; i++) {
-                    if (this.playlists[i] !== null) {
-                        return i;
-                    }
+                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, true, currentPlaylistIndex + 1, this.playlists.length - 1);
+
+                if (possiblePlaylistIndex === -1) {
+                    //CASE: Still no playlist is found
+                    possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, true, 0, currentPlaylistIndex);
                 }
             }
         } else if (relativity === "previous") {
             if (currentPlaylistIndex === 0) {
                 //CASE: Current playlist is the first playlist
-                //Traverse playlists backwards from the end
-                for (let i = this.playlists.length - 1; i >= 0; i--) {
-                    if (this.playlists[i] !== null) {
-                        return i;
-                    }
-                }
+                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, false, 0, this.playlists.length - 1);
             } else {
                 //CASE: Current playlist is not the first playlist
-                //Traverse playlists backwards from current playlist
-                for (let i = currentPlaylistIndex - 1; i >= 0; i--) {
-                    if (this.playlists[i] !== null) {
-                        return i;
-                    }
-                }
+                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, false, 0, currentPlaylistIndex - 1);
 
-                //CASE: Still no playlist is found
-                //Traverse playlists backwards from the end
-                for (let i = this.playlists.length - 1; i >= currentPlaylistIndex; i--) {
-                    if (this.playlists[i] !== null) {
-                        return i;
-                    }
+                if (possiblePlaylistIndex === -1) {
+                    //CASE: Still no playlist is found
+                    possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, false, currentPlaylistIndex, this.playlists.length - 1);
                 }
             }
-        } else {
-            return null;
+
         }
+
+        return possiblePlaylistIndex;
     }
 
     queryRelativeTrackPosition(relativity) {
@@ -233,7 +211,7 @@ export class MusicSourceController {
         const currentTrackIndex = parseInt(localStorage.getItem("currentTrackIndex"));
         const currentPlaylist = this.playlists[currentPlaylistIndex];
 
-        const trackPosition = {
+        const possibleTrackPosition = {
             playlistIndex: null,
             trackIndex: null
         };
@@ -241,91 +219,49 @@ export class MusicSourceController {
         if (currentPlaylist !== null && relativity === "next") {
             if (currentTrackIndex === currentPlaylist.tracks.length - 1) {
                 //CASE: Now playing is the final track
-                trackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-
-                //Traverse possible playlist forwards from beginning
-                for (let i = 0; i < this.playlists[trackPosition.playlistIndex].tracks.length; i++) {
-                    if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                        trackPosition.trackIndex = i;
-                        break;
-                    }
-                }
-            }else {
+                possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+            } else {
                 //CASE: Now playing is not the final track
-                trackPosition.playlistIndex = currentPlaylistIndex;
+                possibleTrackPosition.playlistIndex = currentPlaylistIndex;
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, currentTrackIndex + 1, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
 
-                //Traverse possible playlist forwards from current track
-                for (let i = currentTrackIndex + 1; i < this.playlists[trackPosition.playlistIndex].tracks.length; i++) {
-                    if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                        trackPosition.trackIndex = i;
-                        break;
-                    }
-                }
-
-                if (trackPosition.trackIndex === null) {
+                if (possibleTrackPosition.trackIndex === null) {
                     //CASE: Still no track is found
-                    trackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-    
-                    //Traverse possible playlist forwards from beginning until current track
-                    for (let i = 0; i < currentTrackIndex; i++) {
-                        if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                            trackPosition.trackIndex = i;
-                            break;
-                        }
-                    }
+                    possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                    possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, 0, currentTrackIndex);
                 }
-
             }
         } else if (currentPlaylist !== null && relativity === "previous") {
             if (currentTrackIndex === 0) {
                 //CASE: Now playing is the first track
-                trackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-
-                //Traverse possible playlist backwards from end
-                for (let i = this.playlists[trackPosition.playlistIndex].tracks.length-1; i >= 0 ; i--) {
-                    if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                        trackPosition.trackIndex = i;
-                        break;
-                    }
-                }
+                possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
             } else {
                 //CASE: Now playing is not the first track
-                trackPosition.playlistIndex = currentPlaylistIndex;
+                possibleTrackPosition.playlistIndex = currentPlaylistIndex;
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, 0, currentTrackIndex - 1);
 
-                //Traverse possible playlist backwards from current track
-                for (let i = currentTrackIndex - 1; i >= 0 ; i--) {
-                    if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                        trackPosition.trackIndex = i;
-                        break;
-                    }
-                }
-
-                if (trackPosition.trackIndex === null) {
+                if (possibleTrackPosition.trackIndex === null) {
                     //CASE: Still no track is found
-                    trackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-    
-                    //Traverse possible playlist backwards from end untill current track
-                    for (let i = this.playlists[trackPosition.playlistIndex].tracks.length - 1; i < currentTrackIndex; i--) {
-                        if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                            trackPosition.trackIndex = i;
-                            break;
-                        }
-                    }
+                    possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                    possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, currentTrackIndex, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
                 }
             }
         } else if (currentPlaylist === null) {
-            trackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-            //Traverse possible playlist forwards from beginning
-            for (let i = 0; i < this.playlists[trackPosition.playlistIndex].tracks.length; i++) {
-                if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                    trackPosition.trackIndex = i;
-                    break;
-                }
+            possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+
+            if (relativity === "next") {
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+            } else if (relativity === "previous") {
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
             }
         }
 
-        return trackPosition;
+        return possibleTrackPosition;
     }
+
+
 
     appendPlaylist(playlist) {
         const assignedPlaylistIndex = this.playlists.push(playlist) - 1;

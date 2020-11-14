@@ -1,3 +1,6 @@
+import { MusicSourceController } from "./MusicSourceController.js";
+import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
+
 //@ts-check
 export class ContextController {
     static cardInterface = null;
@@ -19,17 +22,34 @@ export class ContextController {
             location.href = `/musix/playlists/${panelDivisions[0].dataset.playlistIndex}`;
             ContextController.hide();
         });
+        //Add onclick to removePlaylistButton for removing the playlist
+        panelDivisions[0].firstElementChild.children[2].addEventListener("click", () => {
+            const playlistIndex = parseInt(panelDivisions[0].dataset.playlistIndex);
+            ContextController.cardInterface.getController("musicSource").removePlaylistAt(playlistIndex);
+            PlaylistExplorerController.removePlaylistView(playlistIndex);
+            ContextController.hide();
+        });
 
         //Add onclick to downloadTrackButton for downloading the track
         panelDivisions[1].firstElementChild.children[1].addEventListener("click", () => {
                 location.href = `/musix/playlists/${panelDivisions[1].dataset.playlistIndex}/tracks/${panelDivisions[1].dataset.trackIndex}`;
                 ContextController.hide();
         });
-        //Add onclick to addToQuickPlaylist button for adding the track to quickPlaylist
+        //Add onclick to removeTrack button for removing the track from playlist
         panelDivisions[1].firstElementChild.children[2].addEventListener("click", () => {
+            const trackPosition = {
+                playlistIndex: parseInt(panelDivisions[1].dataset.playlistIndex),
+                trackIndex: parseInt(panelDivisions[1].dataset.trackIndex)
+            };
+            ContextController.cardInterface.getController("musicSource").removeTrackAt(trackPosition);
+            PlaylistExplorerController.removeTrackView(trackPosition);
+            ContextController.hide();
+        });
+        //Add onclick to addToQuickPlaylist button for adding the track to quickPlaylist
+        panelDivisions[1].firstElementChild.children[3].addEventListener("click", () => {
             ContextController.cardInterface.getController("musicSource").addToQuickPlaylist(ContextController.cardInterface.getController("musicSource").getTrackAt({
-                trackIndex: panelDivisions[1].dataset.trackIndex,
-                playlistIndex: panelDivisions[1].dataset.playlistIndex,
+                trackIndex: parseInt(panelDivisions[1].dataset.trackIndex),
+                playlistIndex: parseInt(panelDivisions[1].dataset.playlistIndex),
             }));
             ContextController.hide();
         });

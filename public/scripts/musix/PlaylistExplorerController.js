@@ -49,10 +49,6 @@ export class PlaylistExplorerController {
         // });
     }
 
-    static getView() {
-        return PlaylistExplorerController.view;
-    }
-
     static appendNewPlaylistView(playlist) {
         const playlistView = PlaylistExplorerController.createPlaylistView(playlist);
         PlaylistExplorerController.view.firstElementChild.appendChild(playlistView);
@@ -62,7 +58,37 @@ export class PlaylistExplorerController {
         //NOTE: Playlist's index matches its playlistView index inside playlistViewController
         const playlistView = PlaylistExplorerController.view.firstElementChild.children[playlist.index];
         const trackView = PlaylistExplorerController.createTrackView(trackPosition);
-        playlistView.appendChild(trackView);
+        playlistView.children[1].appendChild(trackView);
+    }
+
+    static removePlaylistView(playlistIndex) {
+        for (let i = 0; i < PlaylistExplorerController.view.firstElementChild.children.length; i++) {
+            if (PlaylistExplorerController.view.firstElementChild.children[i].dataset.playlistIndex === playlistIndex.toString()) {
+                PlaylistExplorerController.view.firstElementChild.children[i].remove();
+                break;
+            }
+        }
+    }
+
+    static removeTrackView(trackPosition) {
+        const playlistViews = PlaylistExplorerController.view.firstElementChild.children;
+        let playlistView = null;
+        playlistViewIterator: for (let i = 0; i < PlaylistExplorerController.view.firstElementChild.children.length; i++) {
+            if (playlistViews[i].dataset.playlistIndex === trackPosition.playlistIndex.toString()) {
+                playlistView = playlistViews[i];
+                for (let j = 0; j < playlistView.children[1].children.length; j++) {
+                    if (playlistView.children[1].children[j].dataset.trackIndex === trackPosition.trackIndex.toString()) {
+                        playlistView.children[1].children[j].remove();
+                        break playlistViewIterator;
+                    }
+                }
+            }
+        }
+
+        //If all tracks views are removed, also delete the playlist view
+        if (playlistView.children[1].children.length === 0) {
+            playlistView.remove();
+        }
     }
 
     static createPlaylistView(playlist) {
@@ -70,6 +96,7 @@ export class PlaylistExplorerController {
         playlistView.removeAttribute("id");
         playlistView.firstElementChild.firstElementChild.textContent = playlist.name;
         // playlistView.firstElementChild.firstElementChild.style.color = playlist.themeColor;
+        playlistView.dataset.playlistIndex = playlist.index.toString();
         playlistView.firstElementChild.firstElementChild.addEventListener("click", () => {
             playlistView.children[1].classList.toggle("inactive");
         });

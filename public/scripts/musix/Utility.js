@@ -44,13 +44,13 @@ export class Utility {
 
     static formatTime(totalSeconds) {
         //Calculate time to HH:MM:SS format
-        const minutesAsFraction = totalSeconds / 60;
         const timeParts = ["", ""];
+        const minutesAsFraction = totalSeconds / 60;
         let wholeMinutes = Math.floor(minutesAsFraction);
         let resultingSeconds = Math.round(60 * (minutesAsFraction - wholeMinutes));
         //Format integers for leading zeros
-        if (wholeMinutes < 10) { timeParts[0] = "0" + wholeMinutes; }
-        if (resultingSeconds < 10) { timeParts[1] = "0" + resultingSeconds; }
+        if (wholeMinutes < 10) { timeParts[0] = "0" + wholeMinutes; } else { timeParts[0] = wholeMinutes.toString(); }
+        if (resultingSeconds < 10) { timeParts[1] = "0" + resultingSeconds; }  else { timeParts[1] = resultingSeconds.toString(); }
         //Output formatted time
         return timeParts;
     }

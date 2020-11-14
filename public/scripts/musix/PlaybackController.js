@@ -126,8 +126,9 @@ export class PlaybackController {
 
     setMute(mute) {
         this.mute = mute;
-
+        
         if (mute) {
+            this.mediaController.pause();
             this.mediaController.volume = 0;
         } else {
             this.mediaController.volume = parseFloat(localStorage.getItem("currentVolume"));
@@ -152,14 +153,16 @@ export class PlaybackController {
             });
         }
 
-        if (playback === true && this.mediaController.paused) {
-            this.mediaController.play();
-            navigator.vibrate(50);
-        } else if (playback === false && !this.mediaController.paused) {
-            this.mediaController.pause();
-            navigator.vibrate(50);
+        //NOTE: Setting playback locally won't work when mute mode  is active
+        if (!this.mute) {
+            if (playback === true && this.mediaController.paused) {
+                this.mediaController.play();
+                navigator.vibrate(50);
+            } else if (playback === false && !this.mediaController.paused) {
+                this.mediaController.pause();
+                navigator.vibrate(50);
+            }
         }
-
     }
 
     setPlaylist(playlist) {
@@ -192,7 +195,7 @@ export class PlaybackController {
             });
         }
 
-        //NOTE: Loading track locally won't work when mute mode mode is active
+        //NOTE: Loading track locally won't work when mute mode is active
         if (!this.mute) {
             const track = this.playlist.tracks[trackIndex];
 

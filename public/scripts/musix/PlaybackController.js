@@ -5,6 +5,7 @@ import { Utility } from "./Utility.js";
 export class PlaybackController {
     cardInterface = null;
     remotePlay = false;
+    mute = false;
     playlist = {};
     boundedHandlers = {
         startSeek: this.startSeek.bind(this),
@@ -123,6 +124,26 @@ export class PlaybackController {
         NowPlayingController.updateViewSection("volume", [1, volume]);
     }
 
+    setMute(mute) {
+        this.mute = mute;
+
+        if (mute) {
+            this.mediaController.volume = 0;
+        } else {
+            this.mediaController.volume = parseFloat(localStorage.getItem("currentVolume"));
+        }
+
+        NowPlayingController.updateViewSection("mute", mute);
+    }
+
+    toggleMute() {
+        if (this.mute) {
+            this.setMute(false);
+        } else {
+            this.setMute(true);
+        }
+    }
+
     setPlayback(playback) {
         if (this.remotePlay) {
             this.cardInterface.getWebSocket().emit("broadcast-event", {
@@ -171,69 +192,72 @@ export class PlaybackController {
             });
         }
 
-        const track = this.playlist.tracks[trackIndex];
+        //NOTE: Loading track locally won't work when mute mode mode is active
+        if (!this.mute) {
+            const track = this.playlist.tracks[trackIndex];
 
-        //Request lyrics if a URI is present
-        // const lyricsDisplay = this.view.querySelector("#lyricsDisplay");
-        // lyricsDisplay.scrollTo(0, 0);
-        // if (track.lyricsFileName) {
-        //     fetch(`/musix/lyrics/${encodeURIComponent(track.lyricsFileName)}`)
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             for (let i = 0; i < data.blocks.length; i++) {
-        //                 if (data.blocks[i][0].startsWith("Chorus") || data.blocks[i][0].startsWith("(x")) {
-        //                     data.blocks[i][0] = `<span style="color: var(--themeColor)">${data.blocks[i][0]}</span>`;
-        //                 }
-        //                 data.blocks[i] = data.blocks[i].join("<br />");
-        //             }
-        //             lyricsDisplay.innerHTML = data.blocks.join("<br /><br />");
-        //         })
-        //         .catch(() => {
-        //             lyricsDisplay.innerHTML = '<span style="color: var(--themeColor)">Aw! Snap</span><br />Couldn\'t connect with the server';
-        //         });
-        // } else {
-        //     lyricsDisplay.innerHTML = "";
-        // }
+            //Request lyrics if a URI is present
+            // const lyricsDisplay = this.view.querySelector("#lyricsDisplay");
+            // lyricsDisplay.scrollTo(0, 0);
+            // if (track.lyricsFileName) {
+            //     fetch(`/musix/lyrics/${encodeURIComponent(track.lyricsFileName)}`)
+            //         .then(response => response.json())
+            //         .then(data => {
+            //             for (let i = 0; i < data.blocks.length; i++) {
+            //                 if (data.blocks[i][0].startsWith("Chorus") || data.blocks[i][0].startsWith("(x")) {
+            //                     data.blocks[i][0] = `<span style="color: var(--themeColor)">${data.blocks[i][0]}</span>`;
+            //                 }
+            //                 data.blocks[i] = data.blocks[i].join("<br />");
+            //             }
+            //             lyricsDisplay.innerHTML = data.blocks.join("<br /><br />");
+            //         })
+            //         .catch(() => {
+            //             lyricsDisplay.innerHTML = '<span style="color: var(--themeColor)">Aw! Snap</span><br />Couldn\'t connect with the server';
+            //         });
+            // } else {
+            //     lyricsDisplay.innerHTML = "";
+            // }
 
-        //Update mediaController
-        this.cardInterface.getController("musicSource").determineTrackUrl(track).then((trackUrl) => {
-            this.mediaController.src = trackUrl;
-            this.mediaController.currentTime = 0;
+            //Update mediaController
+            this.cardInterface.getController("musicSource").determineTrackUrl(track).then((trackUrl) => {
+                this.mediaController.src = trackUrl;
+                this.mediaController.currentTime = 0;
 
-            if (autoplay) {
-                this.mediaController.play();
+                if (autoplay) {
+                    this.mediaController.play();
+                }
+            });
+
+            //Calculate media metadata
+            const mediaMetadata = {
+                title: track.title,
+                artist: track.artist,
+                album: this.playlist.name
+            };
+
+            if (track.artist) {
+                mediaMetadata.artist = track.artist;
+            } else {
+                mediaMetadata.artist = "Unknown Artist";
             }
-        });
 
-        //Calculate media metadata
-        const mediaMetadata = {
-            title: track.title,
-            artist: track.artist,
-            album: this.playlist.name
-        };
+            if (track.title) {
+                mediaMetadata.title = track.title;
+            } else {
+                mediaMetadata.title = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."));
+            }
 
-        if (track.artist) {
-            mediaMetadata.artist = track.artist;
-        } else {
-            mediaMetadata.artist = "Unknown Artist";
+            //Update playback state
+            localStorage.setItem("currentTrackIndex", trackIndex.toString());
+
+            //Update media session
+            navigator.mediaSession.metadata.title = mediaMetadata.title;
+            navigator.mediaSession.metadata.artist = mediaMetadata.artist;
+            navigator.mediaSession.metadata.album = mediaMetadata.album;
+
+            //Update UI
+            NowPlayingController.updateViewSection("track", mediaMetadata);
         }
-
-        if (track.title) {
-            mediaMetadata.title = track.title;
-        } else {
-            mediaMetadata.title = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."));
-        }
-
-        //Update playback state
-        localStorage.setItem("currentTrackIndex", trackIndex.toString());
-
-        //Update media session
-        navigator.mediaSession.metadata.title = mediaMetadata.title;
-        navigator.mediaSession.metadata.artist = mediaMetadata.artist;
-        navigator.mediaSession.metadata.album = mediaMetadata.album;
-
-        //Update UI
-        NowPlayingController.updateViewSection("track", mediaMetadata);
     }
 
     seekTo(time) {

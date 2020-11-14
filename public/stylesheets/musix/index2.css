@@ -29,7 +29,7 @@
         --tertiaryColor: rgb(225, 225, 225);
     }
 
-    button>img {
+    img {
         filter: invert();
     }
 }
@@ -187,7 +187,7 @@ img {
 
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center;
 
     box-shadow: 0 0 30px var(--themeColor), inset 0 0 10px black;
     border-radius: 50%;
@@ -196,6 +196,9 @@ img {
 }
 
 .slider>div {
+    position: absolute;
+    bottom: 0;
+
     box-sizing: content-box;
 
     width: 0;
@@ -231,6 +234,11 @@ img {
     width: 30vh;
 
     transform: rotate(70.5deg);
+}
+
+#volumeSlider > img {
+    height: 20%;
+    width: 20%;
 }
 
 #displayContainer {

@@ -20,6 +20,10 @@ export class NowPlayingController {
         NowPlayingController.playTimeDisplays = NowPlayingController.view.querySelectorAll(".playTimeDisplay");
         NowPlayingController.controls = NowPlayingController.view.querySelectorAll("#controlsContainer>div>button");
 
+        //Add onclick to volumeSlider for toggling mute mode
+        NowPlayingController.volumeSlider.addEventListener("dblclick", (event) => {
+            NowPlayingController.cardInterface.getController("playback").toggleMute();
+        });
         //Add onpointerdown to volumeSlider for changing volume
         //NOTE: Changing volume is done in realtime except in RemotePlay
         NowPlayingController.volumeSlider.addEventListener("pointerdown", (event) => {
@@ -96,6 +100,15 @@ export class NowPlayingController {
             case "volume": {
                 NowPlayingController.playTimeDisplays[2].textContent = Math.round(value[1] * 100).toString();
                 Utility.setCircularSliderView(NowPlayingController.volumeSlider, value[0], value[1]);
+                break;
+            }
+
+            case "mute": {
+                if (value === true) {
+                    this.volumeSlider.style.backgroundColor = "pink";
+                } else {
+                    this.volumeSlider.style.backgroundColor = "var(--tertiaryColor)";
+                }
                 break;
             }
 

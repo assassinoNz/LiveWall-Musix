@@ -51,10 +51,6 @@
     display: none;
 }
 
-p,h1 {
-    text-align: center;
-}
-
 body {
     display: flex;
     justify-content: center;
@@ -62,6 +58,14 @@ body {
 
     height: 100%;
     width: 100%;
+}
+
+p,h1 {
+    text-align: center;
+}
+
+img {
+    pointer-events: none;
 }
 
 .title {

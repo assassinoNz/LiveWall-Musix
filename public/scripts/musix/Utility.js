@@ -27,13 +27,14 @@ export class Utility {
     static formatTime(totalSeconds) {
         //Calculate time to HH:MM:SS format
         const minutesAsFraction = totalSeconds / 60;
+        const timeParts = ["", ""];
         let wholeMinutes = Math.floor(minutesAsFraction);
         let resultingSeconds = Math.round(60 * (minutesAsFraction - wholeMinutes));
         //Format integers for leading zeros
-        if (wholeMinutes < 10) { wholeMinutes = "0" + wholeMinutes; }
-        if (resultingSeconds < 10) { resultingSeconds = "0" + resultingSeconds; }
+        if (wholeMinutes < 10) { timeParts[0] = "0" + wholeMinutes; }
+        if (resultingSeconds < 10) { timeParts[1] = "0" + resultingSeconds; }
         //Output formatted time
-        return [wholeMinutes, resultingSeconds];
+        return timeParts;
     }
 
     static getRandInt(min, max) {

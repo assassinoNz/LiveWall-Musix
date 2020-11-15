@@ -271,7 +271,6 @@ export class PlaybackController {
 
             //Update UI
             NowPlayingController.updateViewSection("track", mediaMetadata);
-            navigator.vibrate(100);
         }
     }
 
@@ -318,6 +317,8 @@ export class PlaybackController {
             this.setPlaylist(playlist);
     
             this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
+
+            navigator.vibrate(100);
         }
     }
 

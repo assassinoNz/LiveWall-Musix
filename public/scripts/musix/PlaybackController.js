@@ -51,7 +51,7 @@ export class PlaybackController {
         this.mediaController.addEventListener("play", () => {
             NowPlayingController.setState("playback", true);
             navigator.mediaSession.playbackState = "playing";
-            navigator.vibrate(50);
+            navigator.vibrate(100);
         });
         //Add ontimeupdate to mediaController for updating state and UI
         this.mediaController.addEventListener("timeupdate", this.boundedHandlers.handleTimeUpdate);
@@ -64,7 +64,7 @@ export class PlaybackController {
         this.mediaController.addEventListener("pause", () => {
             NowPlayingController.setState("playback", false);
             navigator.mediaSession.playbackState = "paused";
-            navigator.vibrate(50);
+            navigator.vibrate(100);
         });
         //Add onended to mediaController for playing next track
         this.mediaController.addEventListener("ended", () => {
@@ -271,7 +271,7 @@ export class PlaybackController {
 
             //Update UI
             NowPlayingController.updateViewSection("track", mediaMetadata);
-            navigator.vibrate(50);
+            navigator.vibrate(100);
         }
     }
 

@@ -105,7 +105,7 @@ export class NowPlayingController {
 
             case "remoteOnly": {
                 if (value === true) {
-                    this.volumeSlider.style.backgroundColor = "crimson";
+                    this.volumeSlider.style.backgroundColor = "var(--themeColor)";
                 } else {
                     this.volumeSlider.style.backgroundColor = "var(--tertiaryColor)";
                 }

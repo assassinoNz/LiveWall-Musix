@@ -113,6 +113,11 @@ export class PlaybackController {
     setRemoteOnly(remoteOnly) {
         this.remoteOnly = remoteOnly;
 
+        //NOTE: RemotePlay must be enabled along with RemoteOnly
+        if (remoteOnly) {
+            this.setRemotePlay(true);
+        }
+
         NowPlayingController.updateViewSection("remoteOnly", remoteOnly);
     }
 

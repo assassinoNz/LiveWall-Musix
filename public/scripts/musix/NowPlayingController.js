@@ -20,9 +20,9 @@ export class NowPlayingController {
         NowPlayingController.playTimeDisplays = NowPlayingController.view.querySelectorAll(".playTimeDisplay");
         NowPlayingController.controls = NowPlayingController.view.querySelectorAll("#controlsContainer>div>button");
 
-        //Add onclick to volumeSlider for toggling mute mode
+        //Add onclick to volumeSlider for toggling remote only mode
         NowPlayingController.volumeSlider.addEventListener("contextmenu", (event) => {
-            NowPlayingController.cardInterface.getController("playback").toggleMute();
+            NowPlayingController.cardInterface.getController("playback").toggleRemoteOnly();
         });
         //Add onpointerdown to volumeSlider for changing volume
         //NOTE: Changing volume is done in realtime except in RemotePlay
@@ -103,9 +103,9 @@ export class NowPlayingController {
                 break;
             }
 
-            case "mute": {
+            case "remoteOnly": {
                 if (value === true) {
-                    this.volumeSlider.style.backgroundColor = "pink";
+                    this.volumeSlider.style.backgroundColor = "crimson";
                 } else {
                     this.volumeSlider.style.backgroundColor = "var(--tertiaryColor)";
                 }

@@ -86,11 +86,6 @@ export class MusicSourceController {
                 URL.revokeObjectURL(this.latestTrackUrl);
             }
 
-
-
-            //NOTE: This must be done only in online mode
-
-
             //Request playlist database and playlist metadata
             return fetch("/musix/playlists")
                 .then(response => response.json())
@@ -216,8 +211,8 @@ export class MusicSourceController {
         const currentPlaylist = this.playlists[currentPlaylistIndex];
 
         const possibleTrackPosition = {
-            playlistIndex: null,
-            trackIndex: null
+            playlistIndex: -1,
+            trackIndex: -1
         };
 
         if (currentPlaylist !== null && relativity === "next") {

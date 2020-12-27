@@ -115,6 +115,7 @@ export class NowPlayingController {
             case "playlist": {
                 NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = value.name;
                 document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", value.themeColor);
+                document.styleSheets[0].cssRules[3].cssRules[0].style.setProperty("--backgroundColor", Utility.getRandColor(10, 30));
                 break;
             }
 

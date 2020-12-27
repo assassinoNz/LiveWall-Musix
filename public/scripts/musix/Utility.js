@@ -59,8 +59,8 @@ export class Utility {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    static getRandColor() {
-        return `rgb(${Utility.getRandInt(100, 255)}, ${Utility.getRandInt(100, 255)}, ${Utility.getRandInt(100, 255)})`;
+    static getRandColor(min, max) {
+        return `rgb(${Utility.getRandInt(min, max)}, ${Utility.getRandInt(min, max)}, ${Utility.getRandInt(min, max)})`;
     }
 
     static toggleButtonGlyph(buttonGlyph) {

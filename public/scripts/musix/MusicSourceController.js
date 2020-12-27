@@ -264,7 +264,7 @@ export class MusicSourceController {
         const assignedPlaylistIndex = this.playlists.push(playlist) - 1;
         playlist.index = assignedPlaylistIndex;
         //Randomize themeColor
-        playlist.themeColor = Utility.getRandColor();
+        playlist.themeColor = Utility.getRandColor(100, 255);
 
         PlaylistExplorerController.appendNewPlaylistView(playlist);
 
@@ -316,7 +316,7 @@ export class MusicSourceController {
         //Initialize a new playlist
         const newPlaylist = {
             name: playlistName,
-            themeColor: Utility.getRandColor(),
+            themeColor: Utility.getRandColor(100, 255),
             index: null,
             tracks: [
 

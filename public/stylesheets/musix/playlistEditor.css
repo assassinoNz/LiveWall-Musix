@@ -68,7 +68,21 @@ body {
     align-items: center;
     justify-content: space-between;
 
-    width: 400px
+    width: 600px;
+    padding: 10px;
+
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 5px;
+}
+
+#controlsContainer>span {
+    font-family: "Ubuntu";
+    color: white;
+    font-weight: bolder;
+    font-size: 200%;
+    text-align: justify;
+    
+    width: 150px;
 }
 
 #submitButton {

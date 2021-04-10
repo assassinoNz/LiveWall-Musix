@@ -100,10 +100,12 @@ export class PlaylistExplorerController {
             playlistView.children[1].classList.toggle("inactive");
 
             if (playlistView.children[1].childElementCount === 0) {
+                const trackViewsFragment = new DocumentFragment();
                 for (let trackIndex = 0; trackIndex < playlist.tracks.length; trackIndex++) {
                     const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: playlist.index, trackIndex: trackIndex });
-                    playlistView.children[1].appendChild(trackView);
+                    trackViewsFragment.appendChild(trackView);
                 }
+                playlistView.children[1].appendChild(trackViewsFragment);
             }
         });
 

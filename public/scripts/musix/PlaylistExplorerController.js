@@ -95,10 +95,16 @@ export class PlaylistExplorerController {
         const playlistView = PlaylistExplorerController.playlistViewTemplate.cloneNode(true);
         playlistView.removeAttribute("id");
         playlistView.firstElementChild.firstElementChild.textContent = playlist.name;
-        // playlistView.firstElementChild.firstElementChild.style.color = playlist.themeColor;
         playlistView.dataset.playlistIndex = playlist.index.toString();
         playlistView.firstElementChild.firstElementChild.addEventListener("click", () => {
             playlistView.children[1].classList.toggle("inactive");
+
+            if (playlistView.children[1].childElementCount === 0) {
+                for (let trackIndex = 0; trackIndex < playlist.tracks.length; trackIndex++) {
+                    const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: playlist.index, trackIndex: trackIndex });
+                    playlistView.children[1].appendChild(trackView);
+                }
+            }
         });
 
         playlistView.firstElementChild.firstElementChild.addEventListener("contextmenu", (event) => {
@@ -106,11 +112,6 @@ export class PlaylistExplorerController {
             ContextController.setupPlaylistContext(playlist.name, playlist.index);
             ContextController.show();
         });
-
-        for (let trackIndex = 0; trackIndex < playlist.tracks.length; trackIndex++) {
-            const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: playlist.index, trackIndex: trackIndex });
-            playlistView.children[1].appendChild(trackView);
-        }
 
         return playlistView;
     }

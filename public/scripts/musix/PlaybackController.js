@@ -191,11 +191,6 @@ export class PlaybackController {
             //Update playback state
             localStorage.setItem("currentPlaylistIndex", playlist.index.toString());
     
-            //Update media session
-            navigator.mediaSession.metadata.artwork = [
-                { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
-            ];
-    
             //Update UI
             NowPlayingController.updateViewSection("playlist", playlist);
         }
@@ -269,14 +264,11 @@ export class PlaybackController {
 
             //Update playback state
             localStorage.setItem("currentTrackIndex", trackIndex.toString());
-
-            //Update media session
-            navigator.mediaSession.metadata.title = mediaMetadata.title;
-            navigator.mediaSession.metadata.artist = mediaMetadata.artist;
-            navigator.mediaSession.metadata.album = mediaMetadata.album;
+            localStorage.setItem(localStorage.getItem("currentPlaylistIndex"), trackIndex.toString());
 
             //Update UI
             NowPlayingController.updateViewSection("track", mediaMetadata);
+            // NowPlayingController.updateViewSection("position", [this.mediaController.duration, this.mediaController.playbackRate, this.mediaController.currentTime]);
         }
     }
 
@@ -289,7 +281,9 @@ export class PlaybackController {
         }
 
         this.mediaController.currentTime = time;
-        //NOTE: UI Updating will be done by the ontimeupdate handler
+
+        //Update UI
+        // NowPlayingController.updateViewSection("position", [this.mediaController.duration, this.mediaController.playbackRate, this.mediaController.currentTime]);
     }
 
     togglePlay() {
@@ -319,9 +313,11 @@ export class PlaybackController {
         } else {
             const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
     
-            const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
-            this.setPlaylist(playlist);
-    
+            if (upcomingTrackPosition.playlistIndex !== parseInt(localStorage.getItem("currentPlaylistIndex"))) {
+                const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
+                this.setPlaylist(playlist);
+            }
+
             this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
 
             navigator.vibrate(100);
@@ -347,7 +343,6 @@ export class PlaybackController {
 
     handleTimeUpdate() {
         //Update UI
-        NowPlayingController.updateViewSection("seek", [this.mediaController.duration, this.mediaController.currentTime]);
-        NowPlayingController.updateViewSection("time", Utility.formatTime(this.mediaController.currentTime));
+        NowPlayingController.updateViewSection("time", [this.mediaController.duration, this.mediaController.currentTime, ...Utility.formatTime(this.mediaController.currentTime)]);
     }
 }

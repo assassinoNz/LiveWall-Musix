@@ -1,4 +1,3 @@
-import { MusicSourceController } from "./MusicSourceController.js";
 import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
 
 //@ts-check
@@ -27,6 +26,21 @@ export class ContextController {
             const playlistIndex = parseInt(panelDivisions[0].dataset.playlistIndex);
             ContextController.cardInterface.getController("musicSource").removePlaylistAt(playlistIndex);
             PlaylistExplorerController.removePlaylistView(playlistIndex);
+            ContextController.hide();
+        });
+        //Add onclick to continuePlaylistButton for continuing the playlist
+        panelDivisions[0].firstElementChild.children[3].addEventListener("click", () => {
+            const playlistIndex = parseInt(panelDivisions[0].dataset.playlistIndex);
+            PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(playlistIndex));
+            if (localStorage.getItem(playlistIndex.toString())) {
+                //CASE: The playlist has been played before
+                //Continue playlist
+                PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(parseInt(localStorage.getItem(playlistIndex.toString())), true);
+            } else {
+                //CASE: The playlist hasn't been played before
+                //PLay from beginning
+                PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(0, true);
+            }
             ContextController.hide();
         });
 

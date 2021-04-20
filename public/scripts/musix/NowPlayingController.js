@@ -116,6 +116,12 @@ export class NowPlayingController {
                 NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = value.name;
                 document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", value.themeColor);
                 document.styleSheets[0].cssRules[3].cssRules[0].style.setProperty("--backgroundColor", Utility.getRandColor(25, 40));
+
+                //Update media session
+                navigator.mediaSession.metadata.artwork = [
+                    { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
+                ];
+
                 break;
             }
 
@@ -123,17 +129,28 @@ export class NowPlayingController {
                 NowPlayingController.view.querySelector("#artistDisplay").textContent = value.artist;
                 NowPlayingController.view.querySelector("#titleDisplay").textContent = value.title;
 
+                //Update media session
+                navigator.mediaSession.metadata.title = value.title;
+                navigator.mediaSession.metadata.artist = value.artist;
+                navigator.mediaSession.metadata.album = value.album;
+
                 break;
             }
 
-            case "seek": {
-                Utility.setCircularSliderView(NowPlayingController.seekSlider, value[0], value[1]);
-                break;
-            }
-
+            // case "position": {
+                //Update media session
+                // navigator.mediaSession.metadata.setPositionState({
+                //     duration: value[0],
+                //     playbackRate: value[1],
+                //     position: value[2],
+                // });
+            //     break;
+            // }
+            
             case "time": {
-                NowPlayingController.playTimeDisplays[0].textContent = value[0];
-                NowPlayingController.playTimeDisplays[1].textContent = value[1];
+                Utility.setCircularSliderView(NowPlayingController.seekSlider, value[0], value[1]);
+                NowPlayingController.playTimeDisplays[0].textContent = value[2];
+                NowPlayingController.playTimeDisplays[1].textContent = value[3];
                 break;
             }
         }

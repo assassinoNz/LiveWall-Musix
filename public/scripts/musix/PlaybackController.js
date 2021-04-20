@@ -312,12 +312,10 @@ export class PlaybackController {
             });
         } else {
             const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
-    
-            if (upcomingTrackPosition.playlistIndex !== parseInt(localStorage.getItem("currentPlaylistIndex"))) {
-                const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
-                this.setPlaylist(playlist);
-            }
-
+            
+            const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
+            this.setPlaylist(playlist);
+            
             this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
 
             navigator.vibrate(100);

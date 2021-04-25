@@ -84,11 +84,6 @@ export class PlaylistExplorerController {
                 }
             }
         }
-
-        //If all tracks views are removed, also delete the playlist view
-        if (playlistView.children[1].children.length === 0) {
-            playlistView.remove();
-        }
     }
 
     static createPlaylistView(playlist) {

@@ -356,9 +356,10 @@ img {
 }
 
 .panel {
-    background-color: rgba(100, 100, 100, 0.9);
+    background-color: var(--backgroundColor);
     backdrop-filter: blur(10px);
     box-shadow: 0 0 10px black;
+    border-top: thin solid var(--themeColor);
     border-bottom: thin solid var(--themeColor);
 
     animation-duration: 0.3s;
@@ -462,8 +463,8 @@ img {
 
 #overlayContainer > button {
     margin: 20px 0 20px 0;
-    height: 25vw;
-    width: 25vw;
+    height: 25vmin;
+    width: 25vmin;
     
     background-color: var(--primaryColor);
     box-shadow: 0 0 10px var(--themeColor);
@@ -543,7 +544,7 @@ img {
     }
 
     .panel {
-        background-color: var(--primaryColor);
+        background-color: var(--backgroundColor);
     }
 
     .panelDivisionSectorItem {

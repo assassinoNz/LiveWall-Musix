@@ -131,10 +131,16 @@ export class MusicSourceController {
 
     removePlaylistAt(playlistIndex) {
         this.playlists[playlistIndex] = null;
+
+        //Update UI
+        PlaylistExplorerController.removePlaylistView(playlistIndex);
     }
 
     removeTrackAt(trackPosition) {
         this.playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex] = null;
+
+        //Update UI
+        PlaylistExplorerController.removeTrackView(trackPosition);
 
         //Remove the playlist if all tracks are null
         let allTracksRemoved = true;
@@ -176,27 +182,27 @@ export class MusicSourceController {
         if (relativity === "next") {
             if (currentPlaylistIndex === this.playlists.length - 1) {
                 //CASE: Current playlist is the final playlist
-                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, true, 0, this.playlists.length - 1);
+                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, 0, this.playlists.length - 1);
             } else {
                 //CASE: Current playlist is the not the final playlist
-                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, true, currentPlaylistIndex + 1, this.playlists.length - 1);
+                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, currentPlaylistIndex + 1, this.playlists.length - 1);
 
                 if (possiblePlaylistIndex === -1) {
                     //CASE: Still no playlist is found
-                    possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, true, 0, currentPlaylistIndex);
+                    possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, 0, currentPlaylistIndex);
                 }
             }
         } else if (relativity === "previous") {
             if (currentPlaylistIndex === 0) {
                 //CASE: Current playlist is the first playlist
-                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, false, 0, this.playlists.length - 1);
+                possiblePlaylistIndex = Utility.findLastNonNullIndex(this.playlists, 0, this.playlists.length - 1);
             } else {
                 //CASE: Current playlist is not the first playlist
-                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, false, 0, currentPlaylistIndex - 1);
+                possiblePlaylistIndex = Utility.findLastNonNullIndex(this.playlists, 0, currentPlaylistIndex - 1);
 
                 if (possiblePlaylistIndex === -1) {
                     //CASE: Still no playlist is found
-                    possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, false, currentPlaylistIndex, this.playlists.length - 1);
+                    possiblePlaylistIndex = Utility.findLastNonNullIndex(this.playlists, currentPlaylistIndex, this.playlists.length - 1);
                 }
             }
 
@@ -219,41 +225,41 @@ export class MusicSourceController {
             if (currentTrackIndex === currentPlaylist.tracks.length - 1) {
                 //CASE: Now playing is the final track
                 possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
             } else {
                 //CASE: Now playing is not the final track
                 possibleTrackPosition.playlistIndex = currentPlaylistIndex;
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, currentTrackIndex + 1, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, currentTrackIndex + 1, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
 
                 if (possibleTrackPosition.trackIndex === null) {
                     //CASE: Still no track is found
                     possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                    possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, 0, currentTrackIndex);
+                    possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, currentTrackIndex);
                 }
             }
         } else if (currentPlaylist !== null && relativity === "previous") {
             if (currentTrackIndex === 0) {
                 //CASE: Now playing is the first track
                 possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
             } else {
                 //CASE: Now playing is not the first track
                 possibleTrackPosition.playlistIndex = currentPlaylistIndex;
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, 0, currentTrackIndex - 1);
+                possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, currentTrackIndex - 1);
 
                 if (possibleTrackPosition.trackIndex === null) {
                     //CASE: Still no track is found
                     possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                    possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, currentTrackIndex, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                    possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, currentTrackIndex, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
                 }
             }
         } else if (currentPlaylist === null) {
             possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
 
             if (relativity === "next") {
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, true, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
             } else if (relativity === "previous") {
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, false, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
             }
         }
 

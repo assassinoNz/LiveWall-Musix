@@ -115,19 +115,20 @@ export class NowPlayingController {
             case "playlist": {
                 NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = value.name;
                 document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", value.themeColor);
-                document.styleSheets[0].cssRules[3].cssRules[0].style.setProperty("--backgroundColor", Utility.getRandColor(25, 40));
-
+                
                 //Update media session
                 navigator.mediaSession.metadata.artwork = [
                     { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
                 ];
-
+                
                 break;
             }
-
+            
             case "track": {
                 NowPlayingController.view.querySelector("#artistDisplay").textContent = value.artist;
                 NowPlayingController.view.querySelector("#titleDisplay").textContent = value.title;
+
+                document.styleSheets[0].cssRules[3].cssRules[0].style.setProperty("--backgroundColor", Utility.getRandColor(25, 40));
 
                 //Update media session
                 navigator.mediaSession.metadata.title = value.title;

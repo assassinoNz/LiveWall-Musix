@@ -1,4 +1,5 @@
 //@ts-check
+import { NavigationController } from "./NavigationController.js";
 import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
 import { Utility } from "./Utility.js";
 
@@ -43,15 +44,6 @@ export class NowPlayingController {
         NowPlayingController.controls[1].addEventListener("click", (event) => {
             NowPlayingController.cardInterface.getController("playback").toggleRemotePlay();
         });
-        NowPlayingController.controls[2].addEventListener("click", () => {
-            NowPlayingController.cardInterface.getController("playback").togglePlay();
-        });
-        NowPlayingController.controls[2].addEventListener("touchstart", (event) => {
-            NowPlayingController.startNavigation(event);
-        });
-        NowPlayingController.controls[2].addEventListener("mousedown", (event) => {
-            NowPlayingController.startNavigation(event);
-        });
     }
 
     static setState(state, value) {
@@ -72,12 +64,12 @@ export class NowPlayingController {
             case "playback": {
                 if (value) {
                     NowPlayingController.cardInterface.retrieveControls[1].firstElementChild.src = "/musix/images/musix/glyph_pause.png";
-                    NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_pause.png";
-                    NowPlayingController.controls[2].classList.add("active");
+                    NavigationController.navigationControl.firstElementChild.src = "/musix/images/musix/glyph_pause.png";
+                    NavigationController.navigationControl.classList.add("active");
                 } else {
                     NowPlayingController.cardInterface.retrieveControls[1].firstElementChild.src = "/musix/images/musix/glyph_play.png";
-                    NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_play.png";
-                    NowPlayingController.controls[2].classList.remove("active");
+                    NavigationController.navigationControl.firstElementChild.src = "/musix/images/musix/glyph_play.png";
+                    NavigationController.navigationControl.classList.remove("active");
                 }
 
                 break;
@@ -226,69 +218,5 @@ export class NowPlayingController {
         }
     }
 
-    static startNavigation(event) {
-        const originalMousePositionX = event.screenX || event.touches[0].screenX;
-        const originalMousePositionY = event.screenY || event.touches[0].screenY;
-        //Save the button image
-        const buttonImageSrc = NowPlayingController.controls[2].firstElementChild.src;
-
-        window.addEventListener("touchmove", determineProcedure);
-        window.addEventListener("mousemove", determineProcedure);
-        window.addEventListener("touchend", executeProcedure);
-        window.addEventListener("mouseup", executeProcedure);
-
-        let differenceX = 0;
-        let differenceY = 0;
-        let procedureToExecute = () => { }
-
-        //INNER EVENT HANDLER FUNCTIONS
-        function determineProcedure(event) {
-            //Calculate the travelledDistance of the mouse as a vector
-            differenceX = (event.screenX || event.touches[0].screenX) - originalMousePositionX;
-            differenceY = (event.screenY || event.touches[0].screenY) - originalMousePositionY;
-
-            const absoluteDifferenceX = Math.abs(differenceX);
-            const absoluteDifferenceY = Math.abs(differenceY);
-            if (absoluteDifferenceX >= absoluteDifferenceY) {
-                //CASE: x axis must be prioritized
-                if (differenceX > 0) {
-                    NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_skipNext.png";
-                    procedureToExecute = () => {
-                        NowPlayingController.cardInterface.getController("playback").skipTrack("next");
-                    };
-                } else if (differenceX < 0) {
-                    NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_skipPrevious.png";
-                    procedureToExecute = () => {
-                        NowPlayingController.cardInterface.getController("playback").skipTrack("previous");
-                    };
-                }
-            } else {
-                //CASE: y axis must be prioritized
-                if (differenceY > 0) {
-                    NowPlayingController.controls[2].firstElementChild.src = "";
-                    procedureToExecute = () => {
-                        NowPlayingController.cardInterface.switchViewport();
-                    };
-                } else if (differenceY < 0) {
-                    NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_search.png";
-                    procedureToExecute = () => {
-                        const keyword = prompt("Specify a keyword to start search");
-                        if (keyword) {
-                            PlaylistExplorerController.search(keyword);
-                        }
-                    };
-                }
-            }
-        }
-
-        function executeProcedure() {
-            NowPlayingController.controls[2].firstElementChild.src = buttonImageSrc;
-            procedureToExecute();
-            //Remove all previously added eventListeners
-            window.removeEventListener("touchmove", determineProcedure);
-            window.removeEventListener("mousemove", determineProcedure);
-            window.removeEventListener("touchend", executeProcedure);
-            window.removeEventListener("mouseup", executeProcedure);
-        }
-    }
+    
 }

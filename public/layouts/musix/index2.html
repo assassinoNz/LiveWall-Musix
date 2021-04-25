@@ -19,6 +19,7 @@
         import { PlaylistExplorerController } from "/musix/scripts/musix/PlaylistExplorerController.js";
         import { PanelController } from "/musix/scripts/musix/PanelController.js";
         import { MusicSourceController } from "/musix/scripts/musix/MusicSourceController.js";
+        import { NavigationController } from "/musix/scripts/musix/NavigationController.js";
         import { Utility } from "/musix/scripts/musix/Utility.js";
 
         window.addEventListener("contextmenu", (event) => {
@@ -56,6 +57,7 @@
 
             templatesContainerFragment = document.getElementById("templateContainer").content;
             viewportContainer = document.getElementById("viewportContainer");
+            navigationControl = document.getElementById("navigationControl");
             createControls = document.querySelectorAll("#createControlsContainer > button");
             retrieveControls = document.querySelectorAll("#retrieveControlsContainer > button");
             updateControls = document.querySelectorAll("#updateControlsContainer > button");
@@ -90,6 +92,14 @@
                     this.playbackController.seekTo(details.seekTime);
                 });
 
+                const overlayContainer = document.getElementById("overlayContainer");
+                overlayContainer.firstElementChild.children[1].addEventListener("click", () => {
+                    this.init(false);
+                });
+                overlayContainer.firstElementChild.children[2].addEventListener("click", () => {
+                    this.init(true);
+                });
+
                 this.retrieveControls[0].addEventListener("click", (event) => {
                     this.playbackController.skipTrack("previous");
                 });
@@ -114,21 +124,13 @@
                 this.updateControls[0].addEventListener("click", (event) => {
                     this.playbackController.toggleRemotePlay();
                 });
-
-                const overlayContainer = document.getElementById("overlayContainer");
-                overlayContainer.firstElementChild.children[1].addEventListener("click", () => {
-                    this.init(false);
-                });
-                overlayContainer.firstElementChild.children[2].addEventListener("click", () => {
-                    this.init(true);
-                });
-
             }
-            
+
             init(offline) {
                 //Initialize independent static controllers
                 PanelController.init(this, document.getElementById("panelContainer"));
                 NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
+                NavigationController.init(this, document.getElementById("viewportContainer"));
 
                 this.musicSourceController.setOffline(offline).then(() => {
                     //Initialize dependent static controllers
@@ -158,25 +160,6 @@
                     }
                 }
             }
-
-            switchViewport(viewportIndex = null) {
-                //Switch to next viewport if the viewportIndex is not specified
-                const viewports = this.viewportContainer.querySelectorAll(".viewport");
-                if (viewportIndex === null) {
-                    if (this.activeViewportIndex === viewports.length - 1) {
-                        viewportIndex = 0;
-                    } else {
-                        viewportIndex = this.activeViewportIndex + 1;
-                    }
-                }
-
-                //Animate out activeViewport
-                viewports[this.activeViewportIndex].classList.replace("popIn", "popOut");
-                //Animate in viewport
-                viewports[viewportIndex].classList.replace("popOut", "popIn");
-
-                this.activeViewportIndex = viewportIndex;
-            }
         }
     </script>
 
@@ -200,9 +183,7 @@
                         </button>
                     </div>
                     <div style="transform: rotate(145deg);">
-                        <button id="navigationControl">
-                            <img src="/musix/images/musix/glyph_play.png" style="transform: rotate(-145deg);" alt="">
-                        </button>
+                        
                     </div>
                 </div>
                 <div id="seekSlider" class="slider" data-start-theta="196.5" data-end-theta="343.5">
@@ -225,7 +206,12 @@
         <div id="playlistExplorerViewport" class="viewport popOut">
 
         </div>
+
+        <button id="navigationControl">
+            <img src="/musix/images/musix/glyph_play.png" alt="">
+        </button>
     </div>
+
 
     <div id="panelContainer" class="popOut" data-last-panel-query="#playlistContextPanel">
         <div id="playlistContextPanel" class="panel popOut" data-playlist-index="0">
@@ -300,10 +286,6 @@
     </div>
 
     <div class="trackView" data-playlist-index="0" data-track-index="0"><span>Track Name</span></div>
-
-    <div class="panelDivisionSectorItem" data-playlist-index="" data-track-index="">
-        Track Name
-    </div>
 </template>
 
 </html>

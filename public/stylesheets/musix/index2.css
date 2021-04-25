@@ -167,7 +167,7 @@ img {
     transform-origin: center center;
 }
 
-#controlsContainer > div > button {
+#controlsContainer > div > button, #navigationControl {
     height: 60px;
     width: 60px;
     
@@ -181,7 +181,7 @@ img {
     transform-origin: center center;
 }
 
-#controlsContainer > div > button.active {
+#controlsContainer > div > button.active, #navigationControl.active {
     box-shadow: 0 0 10px var(--themeColor), inset 0 0 10px var(--negativeColor);
 }
 
@@ -276,7 +276,7 @@ img {
     align-items: flex-start;
     overflow: auto;
 
-    padding: 50px 0 50px 0;
+    padding: 50px 0 180px 0;
 
     background-position: center center;
     background-size: cover;
@@ -295,7 +295,7 @@ img {
 }
 
 .titleContainer {
-    min-width: 25%;
+    min-width: 120px;
     height: 100%;
 }
 
@@ -313,7 +313,6 @@ img {
 .trackViewContainer {
     overflow: auto;
 
-    min-width: 75%;
     height: 100%;
 }
 
@@ -333,6 +332,14 @@ img {
     background-color: var(--themeColor);
 }
 
+#navigationControl {
+    position: absolute;
+    bottom: 90px;
+    left: 120px;
+
+    z-index: 2;
+}
+
 #panelContainer {
     position: absolute;
     top: 0;
@@ -348,7 +355,7 @@ img {
     background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
 
-    z-index: 2;
+    z-index: 3;
 }
 
 #panelContainer.popIn {
@@ -434,7 +441,7 @@ img {
     background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
 
-    z-index: 3;
+    z-index: 4;
 }
 
 @media (orientation: landscape) {

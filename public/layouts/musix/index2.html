@@ -17,7 +17,7 @@
         import { NowPlayingController } from "/musix/scripts/musix/NowPlayingController.js";
         import { PlaybackController } from "/musix/scripts/musix/PlaybackController.js";
         import { PlaylistExplorerController } from "/musix/scripts/musix/PlaylistExplorerController.js";
-        import { ContextController } from "/musix/scripts/musix/ContextController.js";
+        import { PanelController } from "/musix/scripts/musix/PanelController.js";
         import { MusicSourceController } from "/musix/scripts/musix/MusicSourceController.js";
         import { Utility } from "/musix/scripts/musix/Utility.js";
 
@@ -127,7 +127,7 @@
             
             init(offline) {
                 //Initialize independent static controllers
-                ContextController.init(this, document.getElementById("panelContainer"));
+                PanelController.init(this, document.getElementById("panelContainer"));
                 NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
 
                 this.musicSourceController.setOffline(offline).then(() => {

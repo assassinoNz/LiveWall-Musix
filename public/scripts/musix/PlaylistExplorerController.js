@@ -1,5 +1,5 @@
 //@ts-check
-import { ContextController } from "./ContextController.js";
+import { PanelController } from "./PanelController.js";
 
 export class PlaylistExplorerController {
     static cardInterface = null;
@@ -64,7 +64,7 @@ export class PlaylistExplorerController {
 
         playlistView.firstElementChild.firstElementChild.addEventListener("contextmenu", (event) => {
             event.preventDefault();
-            ContextController.show("#playlistContextPanel", {
+            PanelController.show("#playlistContextPanel", {
                 playlistName: playlist.name,
                 playlistIndex: playlist.index
             });
@@ -97,7 +97,7 @@ export class PlaylistExplorerController {
 
             const track = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
 
-            ContextController.show("#trackContextPanel", {
+            PanelController.show("#trackContextPanel", {
                 playlistName: playlists[trackPosition.playlistIndex].name,
                 trackTitle: track.title? track.title :  track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf(".")),
                 playlistIndex: trackPosition.playlistIndex,

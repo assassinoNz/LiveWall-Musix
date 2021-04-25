@@ -358,9 +358,7 @@ img {
 .panel {
     background-color: var(--backgroundColor);
     backdrop-filter: blur(10px);
-    box-shadow: 0 0 10px black;
-    border-top: thin solid var(--themeColor);
-    border-bottom: thin solid var(--themeColor);
+    box-shadow: 0 0 10px var(--themeColor);
 
     animation-duration: 0.3s;
     animation-fill-mode: forwards;

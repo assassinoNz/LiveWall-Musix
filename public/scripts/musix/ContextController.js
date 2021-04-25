@@ -6,30 +6,29 @@ export class ContextController {
 
     static view = null;
 
-    static init(cardInterface, panelView) {
+    static init(cardInterface, panelContainer) {
         ContextController.cardInterface = cardInterface;
 
-        ContextController.view = panelView;
+        ContextController.view = panelContainer;
 
-        ContextController.view.querySelector("button").addEventListener("click", () => {
+        ContextController.view.querySelector(".buttonContainer span").addEventListener("click", () => {
             ContextController.hide();
         });
 
-        const panelDivisions = ContextController.view.querySelectorAll(".panelDivision");
         //Add onclick to downloadPlaylistButton for downloading the playlist
-        panelDivisions[0].firstElementChild.children[1].addEventListener("click", () => {
-            location.href = `/musix/playlists/${panelDivisions[0].dataset.playlistIndex}`;
+        ContextController.view.children[0].children[1].addEventListener("click", () => {
+            location.href = `/musix/playlists/${ContextController.view.children[0].dataset.playlistIndex}`;
             ContextController.hide();
         });
         //Add onclick to removePlaylistButton for removing the playlist
-        panelDivisions[0].firstElementChild.children[2].addEventListener("click", () => {
-            const playlistIndex = parseInt(panelDivisions[0].dataset.playlistIndex);
+        ContextController.view.children[0].children[2].addEventListener("click", () => {
+            const playlistIndex = parseInt(ContextController.view.children[0].dataset.playlistIndex);
             ContextController.cardInterface.getController("musicSource").removePlaylistAt(playlistIndex);
             ContextController.hide();
         });
         //Add onclick to continuePlaylistButton for continuing the playlist
-        panelDivisions[0].firstElementChild.children[3].addEventListener("click", () => {
-            const playlistIndex = parseInt(panelDivisions[0].dataset.playlistIndex);
+        ContextController.view.children[0].children[3].addEventListener("click", () => {
+            const playlistIndex = parseInt(ContextController.view.children[0].dataset.playlistIndex);
             PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(playlistIndex));
             if (localStorage.getItem(playlistIndex.toString())) {
                 //CASE: The playlist has been played before
@@ -44,55 +43,53 @@ export class ContextController {
         });
 
         //Add onclick to downloadTrackButton for downloading the track
-        panelDivisions[1].firstElementChild.children[1].addEventListener("click", () => {
-            location.href = `/musix/playlists/${panelDivisions[1].dataset.playlistIndex}/tracks/${panelDivisions[1].dataset.trackIndex}`;
+        ContextController.view.children[1].children[2].addEventListener("click", () => {
+            location.href = `/musix/playlists/${ContextController.view.children[1].dataset.playlistIndex}/tracks/${ContextController.view.children[1].dataset.trackIndex}`;
             ContextController.hide();
         });
         //Add onclick to removeTrack button for removing the track from playlist
-        panelDivisions[1].firstElementChild.children[2].addEventListener("click", () => {
+        ContextController.view.children[1].children[3].addEventListener("click", () => {
             const trackPosition = {
-                playlistIndex: parseInt(panelDivisions[1].dataset.playlistIndex),
-                trackIndex: parseInt(panelDivisions[1].dataset.trackIndex)
+                playlistIndex: parseInt(ContextController.view.children[1].dataset.playlistIndex),
+                trackIndex: parseInt(ContextController.view.children[1].dataset.trackIndex)
             };
             ContextController.cardInterface.getController("musicSource").removeTrackAt(trackPosition);
             ContextController.hide();
         });
         //Add onclick to addToQuickPlaylist button for adding the track to quickPlaylist
-        panelDivisions[1].firstElementChild.children[3].addEventListener("click", () => {
+        ContextController.view.children[1].children[4].addEventListener("click", () => {
             ContextController.cardInterface.getController("musicSource").addToQuickPlaylist(ContextController.cardInterface.getController("musicSource").getTrackAt({
-                trackIndex: parseInt(panelDivisions[1].dataset.trackIndex),
-                playlistIndex: parseInt(panelDivisions[1].dataset.playlistIndex),
+                trackIndex: parseInt(ContextController.view.children[1].dataset.trackIndex),
+                playlistIndex: parseInt(ContextController.view.children[1].dataset.playlistIndex),
             }));
             ContextController.hide();
         });
     }
 
-    static show() {
+    static show(panelQuery, additionalData = null) {
+        ContextController.view.dataset.lastPanelQuery = panelQuery;
+
+        const panel = ContextController.view.querySelector(panelQuery);
+        
+        if (panelQuery === "#playlistContextPanel") {
+            panel.dataset.playlistIndex = additionalData.playlistIndex;
+            panel.children[0].textContent = additionalData.playlistName;
+        } else if (panelQuery === "#trackContextPanel") {
+            panel.dataset.playlistIndex = additionalData.playlistIndex;
+            panel.dataset.trackIndex = additionalData.trackIndex;
+            panel.children[0].textContent = additionalData.playlistName;
+            panel.children[1].textContent = additionalData.trackTitle;
+        }
+        
         ContextController.view.classList.replace("popOut", "popIn");
+        panel.classList.replace("popOut", "popIn");
     }
 
     static hide() {
-        ContextController.view.classList.replace("popIn", "popOut");
-    }
+        ContextController.view.querySelector(ContextController.view.dataset.lastPanelQuery).classList.replace("popIn", "popOut");
 
-    static setupPlaylistContext(titleTextContent, playlistIndex) {
-        const panelDivisions = ContextController.view.querySelectorAll(".panelDivision");
-        panelDivisions[0].style.display = "initial";
-        panelDivisions[1].style.display = "none";
-
-        panelDivisions[0].dataset.playlistIndex = playlistIndex;
-
-        panelDivisions[0].firstElementChild.children[0].textContent = titleTextContent;
-    }
-
-    static setupTrackContext(titleTextContent, trackPosition) {
-        const panelDivisions = ContextController.view.querySelectorAll(".panelDivision");
-        panelDivisions[0].style.display = "none";
-        panelDivisions[1].style.display = "initial";
-
-        panelDivisions[1].dataset.playlistIndex = trackPosition.playlistIndex;
-        panelDivisions[1].dataset.trackIndex = trackPosition.trackIndex;
-
-        panelDivisions[1].firstElementChild.children[0].textContent = titleTextContent;
+        setTimeout(() => {
+            ContextController.view.classList.replace("popIn", "popOut");
+        }, 250);
     }
 }

@@ -267,12 +267,7 @@ export class NowPlayingController {
                 if (differenceY > 0) {
                     NowPlayingController.controls[2].firstElementChild.src = "";
                     procedureToExecute = () => {
-                        const panelContainer = document.getElementById("panelContainer");
-                        if (panelContainer.classList.contains("popIn")) {
-                            panelContainer.classList.replace("popIn", "popOut");
-                        } else {
-                            panelContainer.classList.replace("popOut", "popIn");
-                        }
+                        NowPlayingController.cardInterface.switchViewport();
                     };
                 } else if (differenceY < 0) {
                     NowPlayingController.controls[2].firstElementChild.src = "/musix/images/musix/glyph_search.png";

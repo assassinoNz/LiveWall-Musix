@@ -52,8 +52,10 @@
             title = document.querySelector("title").textContent;
             playbackController = null;
             musicSourceController = null;
+            activeViewportIndex = 0;
 
             templatesContainerFragment = document.getElementById("templateContainer").content;
+            viewportContainer = document.getElementById("viewportContainer");
             createControls = document.querySelectorAll("#createControlsContainer > button");
             retrieveControls = document.querySelectorAll("#retrieveControlsContainer > button");
             updateControls = document.querySelectorAll("#updateControlsContainer > button");
@@ -114,22 +116,23 @@
                 });
 
                 const overlayContainer = document.getElementById("overlayContainer");
-                overlayContainer.children[0].addEventListener("click", () => {
+                overlayContainer.firstElementChild.children[1].addEventListener("click", () => {
                     this.init(false);
                 });
-                overlayContainer.children[1].addEventListener("click", () => {
+                overlayContainer.firstElementChild.children[2].addEventListener("click", () => {
                     this.init(true);
                 });
-            }
 
+            }
+            
             init(offline) {
                 //Initialize independent static controllers
+                ContextController.init(this, document.getElementById("panelContainer"));
                 NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
-                ContextController.init(this, document.getElementById("contextPanel"));
 
                 this.musicSourceController.setOffline(offline).then(() => {
                     //Initialize dependent static controllers
-                    PlaylistExplorerController.init(this, document.getElementById("playlistExplorerPanel"));
+                    PlaylistExplorerController.init(this, document.getElementById("playlistExplorerViewport"));
 
                     //Initialize playbackController
                     this.playbackController = new PlaybackController(this, document.getElementById("mediaController"));
@@ -155,6 +158,25 @@
                     }
                 }
             }
+
+            switchViewport(viewportIndex = null) {
+                //Switch to next viewport if the viewportIndex is not specified
+                const viewports = this.viewportContainer.querySelectorAll(".viewport");
+                if (viewportIndex === null) {
+                    if (this.activeViewportIndex === viewports.length - 1) {
+                        viewportIndex = 0;
+                    } else {
+                        viewportIndex = this.activeViewportIndex + 1;
+                    }
+                }
+
+                //Animate out activeViewport
+                viewports[this.activeViewportIndex].classList.replace("popIn", "popOut");
+                //Animate in viewport
+                viewports[viewportIndex].classList.replace("popOut", "popIn");
+
+                this.activeViewportIndex = viewportIndex;
+            }
         }
     </script>
 
@@ -162,7 +184,7 @@
 
 <body>
     <div id="viewportContainer">
-        <div id="nowPlayingViewport" class="viewport">
+        <div id="nowPlayingViewport" class="viewport popIn">
             <audio id="mediaController"></audio>
             <div id="sliderContainer">
                 <div id="controlsContainer">
@@ -198,55 +220,40 @@
                 <p id="titleDisplay">Track Name</p>
                 <p id="artistDisplay">Artist</p>
             </div>
-            <!-- <div id="lyricsContainer">
-                <div class="shadower" style="top: 0;"></div>
-                <p id="lyricsDisplay">
+        </div>
 
-                </p>
-                <div class="shadower" style="bottom: 0; background-image: linear-gradient(transparent, black, black);">
-                </div>
-            </div> -->
+        <div id="playlistExplorerViewport" class="viewport popOut">
+
         </div>
     </div>
 
-    <div id="panelContainer" class="popIn">
-        <div id="playlistExplorerPanel" class="panel" data-active-playlist-index="0">
-            <div class="panelDivision">
-
-            </div>
-            <!-- <div class="buttonContainer">
-                <button style="border-top-left-radius: 10px; display:none">ADD</button>
-            </div> -->
+    <div id="panelContainer" class="popOut" data-last-panel-query="#playlistContextPanel">
+        <div id="playlistContextPanel" class="panel popOut" data-playlist-index="0">
+            <h1 style="color: var(--secondaryColor)">Playlist Name</h1>
+            <div><span>Download playlist</span></div>
+            <div><span>Remove playlist from playlists</span></div>
+            <div><span>Continue playlist</span></div>
         </div>
 
-        <div id="contextPanel" class="panel popOut">
-            <!-- playlistContextDivision -->
-            <div class="panelDivision" data-playlist-index="0">
-                <div class="panelDivisionSector">
-                    <div class="panelDivisionSectorItem">Playlist Name</div>
-                    <h1 class="title">Download Playlist</h1>
-                    <h1 class="title">Remove Playlist</h1>
-                    <h1 class="title">Continue Playlist</h1>
-                </div>
-            </div>
-            <!-- trackContextDivision -->
-            <div class="panelDivision" data-playlist-index="0" data-track-index="0">
-                <div class="panelDivisionSector">
-                    <div class="panelDivisionSectorItem">Song Name</div>
-                    <h1 class="title">Download Track</h1>
-                    <h1 class="title">Remove Track</h1>
-                    <h1 class="title">Add to QuickPlaylist&trade;</h1>
-                </div>
-            </div>
-            <div class="buttonContainer">
-                <button style="border-top-left-radius: 10px;">CLOSE</button>
-            </div>
+        <div id="trackContextPanel" class="panel popOut" data-playlist-index="0" data-track-index="0">
+            <h1>Playlist Name</h1>
+            <h1 style="color: var(--secondaryColor)">Song Name</h1>
+            <div><span>Download track</span></div>
+            <div><span>Remove track from playlist</span></div>
+            <div><span>Add to QuickPlaylist&trade;</span></div>
+        </div>
+
+        <div class="buttonContainer">
+            <span style="background-color: var(--secondaryColor)">Close</span>
         </div>
     </div>
 
     <div id="overlayContainer">
-        <button>ONLINE</button>
-        <button>OFFLINE</button>
+        <div id="sourceSelectionOverlay" class="panel">
+            <h1 style="color: var(--secondaryColor)">What will be your source?</h1>
+            <div><span>Use server source</span></div>
+            <div><span>Let me browse the source</span></div>
+        </div>
     </div>
 </body>
 
@@ -283,14 +290,16 @@
 </div>
 
 <template id="templateContainer">
-    <div id="playlistViewTemplate">
-        <div class="panelDivisionSector" style="width:auto;">
-            <h1 class="title">Playlist Name</h1>
+    <div class="playlistView" data-playlist-index="0">
+        <div class="titleContainer">
+            <h1>Title</h1>
         </div>
-        <div class="panelDivisionSector inactive">
+        <div class="trackViewContainer">
 
         </div>
     </div>
+
+    <div class="trackView" data-playlist-index="0" data-track-index="0"><span>Track Name</span></div>
 
     <div class="panelDivisionSectorItem" data-playlist-index="" data-track-index="">
         Track Name

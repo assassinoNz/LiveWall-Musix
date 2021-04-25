@@ -9,12 +9,12 @@ export class PlaylistExplorerController {
     static trackViewTemplate = null;
     static trackContextPanel = document.getElementById("trackContextPanel");
 
-    static init(cardInterface, panelView) {
+    static init(cardInterface, viewport) {
         PlaylistExplorerController.cardInterface = cardInterface;
 
-        PlaylistExplorerController.view = panelView;
-        PlaylistExplorerController.playlistViewTemplate = PlaylistExplorerController.cardInterface.getTemplate("#playlistViewTemplate");
-        PlaylistExplorerController.trackViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".panelDivisionSectorItem");
+        PlaylistExplorerController.view = viewport;
+        PlaylistExplorerController.playlistViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".playlistView");
+        PlaylistExplorerController.trackViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".trackView");
 
         const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
         //Load playlistExplorer
@@ -25,89 +25,49 @@ export class PlaylistExplorerController {
 
             playlistViewsFragment.appendChild(playlistView);
         }
-        PlaylistExplorerController.view.children[0].appendChild(playlistViewsFragment);
-
-        // PlaylistExplorerController.view.querySelector("button").addEventListener("click", () => {
-        //     const directoryPath = prompt("Specify an absolute directory path for your playlist");
-        //     if (directoryPath) {
-        //         //Fetch a playlist for the directoryPath
-        //         fetch(`/musix/playlists?directoryPath=${directoryPath}`, {
-        //             method: "PUT",
-        //             headers: {
-        //                 "Content-Type": "application/json"
-        //             }
-        //         })
-        //             .then(response => response.json())
-        //             .then(response => {
-        //                 if (response.status) {
-        //                     PlaylistExplorerController.cardInterface.getController("playlists").appendPlaylist(response.data);
-        //                 } else {
-        //                     alert(response.serverError.message);
-        //                 }
-        //             });
-        //     }
-        // });
+        PlaylistExplorerController.view.appendChild(playlistViewsFragment);
     }
 
     static appendNewPlaylistView(playlist) {
         const playlistView = PlaylistExplorerController.createPlaylistView(playlist);
-        PlaylistExplorerController.view.firstElementChild.appendChild(playlistView);
+        PlaylistExplorerController.view.appendChild(playlistView);
     }
 
     static appendNewTrackView(playlist, trackPosition) {
-        //NOTE: Playlist's index matches its playlistView index inside playlistViewController
-        const playlistView = PlaylistExplorerController.view.firstElementChild.children[playlist.index];
+        //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
+        const playlistView = PlaylistExplorerController.view.children[playlist.index];
         const trackView = PlaylistExplorerController.createTrackView(trackPosition);
         playlistView.children[1].appendChild(trackView);
     }
 
     static removePlaylistView(playlistIndex) {
-        for (let i = 0; i < PlaylistExplorerController.view.firstElementChild.children.length; i++) {
-            if (PlaylistExplorerController.view.firstElementChild.children[i].dataset.playlistIndex === playlistIndex.toString()) {
-                PlaylistExplorerController.view.firstElementChild.children[i].remove();
-                break;
-            }
-        }
+        //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
+        PlaylistExplorerController.view.children[playlistIndex].style.display = "none";
     }
 
     static removeTrackView(trackPosition) {
-        const playlistViews = PlaylistExplorerController.view.firstElementChild.children;
-        let playlistView = null;
-        playlistViewIterator: for (let i = 0; i < PlaylistExplorerController.view.firstElementChild.children.length; i++) {
-            if (playlistViews[i].dataset.playlistIndex === trackPosition.playlistIndex.toString()) {
-                playlistView = playlistViews[i];
-                for (let j = 0; j < playlistView.children[1].children.length; j++) {
-                    if (playlistView.children[1].children[j].dataset.trackIndex === trackPosition.trackIndex.toString()) {
-                        playlistView.children[1].children[j].remove();
-                        break playlistViewIterator;
-                    }
-                }
-            }
-        }
+        //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
+        //NOTE: Track's index matches its trackView index inside playlistView
+        const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
+        playlistView.children[1].children[trackPosition.trackIndex].style.display = "none";
     }
 
     static createPlaylistView(playlist) {
         const playlistView = PlaylistExplorerController.playlistViewTemplate.cloneNode(true);
-        playlistView.removeAttribute("id");
-        playlistView.firstElementChild.firstElementChild.textContent = playlist.name;
+        playlistView.firstElementChild.children[0].textContent = playlist.name;
         playlistView.dataset.playlistIndex = playlist.index.toString();
-        playlistView.firstElementChild.firstElementChild.addEventListener("click", () => {
-            playlistView.children[1].classList.toggle("inactive");
 
-            if (playlistView.children[1].childElementCount === 0) {
-                const trackViewsFragment = new DocumentFragment();
-                for (let trackIndex = 0; trackIndex < playlist.tracks.length; trackIndex++) {
-                    const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: playlist.index, trackIndex: trackIndex });
-                    trackViewsFragment.appendChild(trackView);
-                }
-                playlistView.children[1].appendChild(trackViewsFragment);
-            }
-        });
+        for (let trackIndex = 0; trackIndex < playlist.tracks.length; trackIndex++) {
+            const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: playlist.index, trackIndex: trackIndex });
+            playlistView.children[1].appendChild(trackView);
+        }
 
         playlistView.firstElementChild.firstElementChild.addEventListener("contextmenu", (event) => {
             event.preventDefault();
-            ContextController.setupPlaylistContext(playlist.name, playlist.index);
-            ContextController.show();
+            ContextController.show("#playlistContextPanel", {
+                playlistName: playlist.name,
+                playlistIndex: playlist.index
+            });
         });
 
         return playlistView;
@@ -116,17 +76,18 @@ export class PlaylistExplorerController {
     static createTrackView(trackPosition) {
         const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
         const trackView = PlaylistExplorerController.trackViewTemplate.cloneNode(true);
-        trackView.removeAttribute("id");
-        if (playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title) {
-            trackView.textContent = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title;
-        } else {
-            const track = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
-            trackView.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
-        }
         trackView.dataset.playlistIndex = trackPosition.playlistIndex.toString();
         trackView.dataset.trackIndex = trackPosition.trackIndex.toString();
+        trackView.firstElementChild.style.backgroundColor = playlists[trackPosition.playlistIndex].themeColor;
 
-        trackView.addEventListener("click", (event) => {
+        if (playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title) {
+            trackView.firstElementChild.textContent = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title;
+        } else {
+            const track = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
+            trackView.firstElementChild.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
+        }
+
+        trackView.firstElementChild.addEventListener("click", (event) => {
             PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex))
             PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(trackPosition.trackIndex, true);
         });
@@ -134,16 +95,14 @@ export class PlaylistExplorerController {
         trackView.addEventListener("contextmenu", (event) => {
             event.preventDefault();
 
-            let titleTextContent = "";
-            if (playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title) {
-                titleTextContent = playlists[trackPosition.playlistIndex].name + " . " + playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].title;
-            } else {
-                const track = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
-                titleTextContent = playlists[trackPosition.playlistIndex].name + " . " + track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
-            }
+            const track = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
 
-            ContextController.setupTrackContext(titleTextContent, trackPosition);
-            ContextController.show();
+            ContextController.show("#trackContextPanel", {
+                playlistName: playlists[trackPosition.playlistIndex].name,
+                trackTitle: track.title? track.title :  track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf(".")),
+                playlistIndex: trackPosition.playlistIndex,
+                trackIndex: trackPosition.trackIndex
+            });
         });
 
         return trackView;

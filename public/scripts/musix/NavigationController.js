@@ -1,3 +1,7 @@
+//@ts-check
+import { PanelController } from "./PanelController.js";
+import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
+
 export class NavigationController {
     static cardInterface = null;
     static activeViewportIndex = 0;
@@ -68,10 +72,7 @@ export class NavigationController {
                 } else if (differenceY < 0) {
                     NavigationController.navigationControl.firstElementChild.src = "/musix/images/musix/glyph_search.png";
                     procedureToExecute = () => {
-                        const keyword = prompt("Specify a keyword to start search");
-                        if (keyword) {
-                            PlaylistExplorerController.search(keyword);
-                        }
+                        PanelController.show("#searchPanel");
                     };
                 }
             }

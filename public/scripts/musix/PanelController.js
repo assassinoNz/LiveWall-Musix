@@ -48,7 +48,7 @@ export class PanelController {
             location.href = `/musix/playlists/${PanelController.view.children[1].dataset.playlistIndex}/tracks/${PanelController.view.children[1].dataset.trackIndex}`;
             PanelController.hide();
         });
-        //Add onclick to removeTrack button for removing the track from playlist
+        //Add onclick to removeTrackButton for removing the track from playlist
         PanelController.view.children[1].children[2].addEventListener("click", () => {
             const trackPosition = {
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
@@ -57,13 +57,19 @@ export class PanelController {
             PanelController.cardInterface.getController("musicSource").removeTrackAt(trackPosition);
             PanelController.hide();
         });
-        //Add onclick to addToQuickPlaylist button for adding the track to quickPlaylist
+        //Add onclick to addToQuickPlaylistButton for adding the track to quickPlaylist
         PanelController.view.children[1].children[3].addEventListener("click", () => {
             PanelController.cardInterface.getController("musicSource").addToQuickPlaylist(PanelController.cardInterface.getController("musicSource").getTrackAt({
                 trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex),
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
             }));
             PanelController.hide();
+        });
+        //Add onkeyup to searchInput for displaying search results
+        PanelController.view.children[2].children[1].addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                PlaylistExplorerController.search(event.target.value);
+            }
         });
     }
 

@@ -8,6 +8,7 @@ export class PlaylistExplorerController {
     static playlistViewTemplate = null;
     static trackViewTemplate = null;
     static trackContextPanel = document.getElementById("trackContextPanel");
+    static draggingTrackView = null;
 
     static init(cardInterface, viewport) {
         PlaylistExplorerController.cardInterface = cardInterface;
@@ -87,11 +88,6 @@ export class PlaylistExplorerController {
             trackView.firstElementChild.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
         }
 
-        trackView.firstElementChild.addEventListener("click", (event) => {
-            PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex))
-            PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(trackPosition.trackIndex, true);
-        });
-
         trackView.addEventListener("contextmenu", (event) => {
             event.preventDefault();
 
@@ -99,10 +95,24 @@ export class PlaylistExplorerController {
 
             PanelController.show("#trackContextPanel", {
                 playlistName: playlists[trackPosition.playlistIndex].name,
-                trackTitle: track.title? track.title :  track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf(".")),
+                trackTitle: track.title ? track.title : track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf(".")),
                 playlistIndex: trackPosition.playlistIndex,
                 trackIndex: trackPosition.trackIndex
             });
+        });
+        trackView.addEventListener("dragover", (event) => {
+            event.preventDefault();
+        });
+        trackView.addEventListener("drop", (event) => {
+            trackView.parentElement.insertBefore(this.draggingTrackView, trackView);
+        });
+        trackView.addEventListener("dragstart", (event) => {
+            this.draggingTrackView = trackView;
+        });
+
+        trackView.firstElementChild.addEventListener("click", (event) => {
+            PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex))
+            PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(trackPosition.trackIndex, true);
         });
 
         return trackView;
@@ -110,25 +120,36 @@ export class PlaylistExplorerController {
 
     static search(keyword) {
         keyword = keyword.toLowerCase();
-        let found = false;
+        const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
+        const trackViewFragment = new DocumentFragment();
 
-        const panelDivisionSectorItems = document.getElementsByClassName("panelDivisionSectorItem");
-        for (let i = 0; i < panelDivisionSectorItems.length; i++) {
-            if (panelDivisionSectorItems[i].textContent.toLowerCase().includes(keyword)) {
-                panelDivisionSectorItems[i].scrollIntoView();
-                PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(parseInt(panelDivisionSectorItems[i].dataset.playlistIndex)));
-                PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(parseInt(panelDivisionSectorItems[i].dataset.trackIndex), false);
-                found = true;
-                break;
+        for (let i = 0; i < playlists.length; i++) {
+            for (let j = 0; j < playlists[i].tracks.length; j++) {
+                if (playlists[i].tracks[j].title.toLowerCase().includes(keyword) || playlists[i].tracks[j].artist.toLowerCase().includes(keyword)) {
+                    const trackView = PlaylistExplorerController.trackViewTemplate.cloneNode(true);
+                    trackView.dataset.playlistIndex = i.toString();
+                    trackView.dataset.trackIndex = j.toString();
+                    trackView.firstElementChild.style.backgroundColor = playlists[i].themeColor;
+
+                    if (playlists[i].tracks[j].title) {
+                        trackView.firstElementChild.textContent = playlists[i].tracks[j].title;
+                    } else {
+                        const track = playlists[i].tracks[j];
+                        trackView.firstElementChild.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
+                    }
+
+                    trackView.firstElementChild.addEventListener("click", (event) => {
+                        PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(i))
+                        PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(j, true);
+                    });
+
+                    trackViewFragment.appendChild(trackView);
+                }
             }
         }
 
-        if (!found) {
-            if (window.frameElement) {
-                window.parent.shellInterface.throwAlert("Oops! We found nothing", "Try words instead of phrases", "We couldn't find a track matching your keyword. Try again with a different keyword", null, "OK", null);
-            } else {
-                alert("We couldn't find a track matching your keyword. Try again with a different keyword");
-            }
-        }
+        const searchPanel = PanelController.view.querySelector("#searchPanel");
+        searchPanel.children[2].innerHTML = "";
+        searchPanel.children[2].appendChild(trackViewFragment);
     }
 }

@@ -27,11 +27,6 @@ export class PlaylistExplorerController {
             playlistViewsFragment.appendChild(playlistView);
         }
         PlaylistExplorerController.view.appendChild(playlistViewsFragment);
-
-        PlaylistExplorerController.view.addEventListener("contextmenu", (event) => {
-            event.preventDefault();
-            PanelController.show("#playlistSubmitPanel");
-        });
     }
 
     static appendNewPlaylistView(playlist) {
@@ -98,36 +93,53 @@ export class PlaylistExplorerController {
         });
         trackView.addEventListener("drop", (event) => {
             trackView.parentElement.insertBefore(this.draggingTrackView, trackView);
-            
+
             //Remove the draggingTrack from the original playlist
             const draggingTrackPosition = {
                 playlistIndex: parseInt(this.draggingTrackView.dataset.playlistIndex),
                 trackIndex: parseInt(this.draggingTrackView.dataset.trackIndex)
             };
             const draggingTrack = playlists[draggingTrackPosition.playlistIndex].tracks.splice(draggingTrackPosition.trackIndex, 1)[0];
-            
-            //Fix all trackView dataset values in the original playlist starting from the draggingTrack's index
-            //NOTE: A trackView's location corresponds to its track location
-            //NOTE: Now the draggingTrackView's position is occupied by the next element
-            for (let i = draggingTrackPosition.trackIndex; i < PlaylistExplorerController.view.children[draggingTrackPosition.playlistIndex].children[1].childElementCount; i++) {
-                PlaylistExplorerController.view.children[draggingTrackPosition.playlistIndex].children[1].children[i].dataset.trackIndex = i.toString();
-            }
-            
+
+
+
+
             //Add the dragging track into the new playlist
             const droppingTrackPosition = {
                 playlistIndex: parseInt(trackView.dataset.playlistIndex),
                 trackIndex: parseInt(trackView.dataset.trackIndex)
             }
             playlists[droppingTrackPosition.playlistIndex].tracks.splice(droppingTrackPosition.trackIndex, 0, draggingTrack);
-            
-            //Fix all trackView dataset values in the dropping playlist starting from the droppingTrack's index
-            //NOTE: A trackView's location corresponds to its track location
-            for (let i = droppingTrackPosition.trackIndex; i < PlaylistExplorerController.view.children[droppingTrackPosition.playlistIndex].children[1].childElementCount; i++) {
-                PlaylistExplorerController.view.children[droppingTrackPosition.playlistIndex].children[1].children[i].dataset.trackIndex = i.toString();
-            }
 
-            //Fix draggingTrackView's dataset playlistIndex
-            this.draggingTrackView.dataset.playlistIndex = droppingTrackPosition.playlistIndex.toString();
+
+
+            if (draggingTrackPosition.playlistIndex === droppingTrackPosition.playlistIndex) {
+                //CASE: Change is made within a single playlist
+
+                //Fix all trackView dataset values in the playlist starting from the lowest track index
+                const lowestIndex = (draggingTrackPosition.trackIndex < droppingTrackPosition.trackIndex ? draggingTrackPosition.trackIndex : droppingTrackPosition.trackIndex)
+                for (let i = lowestIndex; i < PlaylistExplorerController.view.children[draggingTrackPosition.playlistIndex].children[1].childElementCount; i++) {
+                    PlaylistExplorerController.view.children[draggingTrackPosition.playlistIndex].children[1].children[i].dataset.trackIndex = i.toString();
+                }
+            } else {
+                //CASE: Change involves two playlists
+
+                //Fix all trackView dataset values in the original playlist starting from the draggingTrack's index
+                //NOTE: A trackView's location corresponds to its track location
+                //NOTE: Now the draggingTrackView's position is occupied by the next element
+                for (let i = draggingTrackPosition.trackIndex; i < PlaylistExplorerController.view.children[draggingTrackPosition.playlistIndex].children[1].childElementCount; i++) {
+                    PlaylistExplorerController.view.children[draggingTrackPosition.playlistIndex].children[1].children[i].dataset.trackIndex = i.toString();
+                }
+
+                //Fix all trackView dataset values in the dropping playlist starting from the droppingTrack's index
+                //NOTE: A trackView's location corresponds to its track location
+                for (let i = droppingTrackPosition.trackIndex; i < PlaylistExplorerController.view.children[droppingTrackPosition.playlistIndex].children[1].childElementCount; i++) {
+                    PlaylistExplorerController.view.children[droppingTrackPosition.playlistIndex].children[1].children[i].dataset.trackIndex = i.toString();
+                }
+
+                //Fix draggingTrackView's dataset playlistIndex
+                this.draggingTrackView.dataset.playlistIndex = droppingTrackPosition.playlistIndex.toString();
+            }
 
             this.draggingTrackView = null;
         });
@@ -141,7 +153,6 @@ export class PlaylistExplorerController {
         });
         trackView.firstElementChild.addEventListener("contextmenu", (event) => {
             event.preventDefault();
-            event.stopPropagation();
 
             const track = playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
 
@@ -192,14 +203,18 @@ export class PlaylistExplorerController {
     }
 
     static savePlaylistsToDisk() {
+        //Remove index field from each playlist
+        const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
+        for (const playlist of playlists) {
+            delete playlist.index;
+        }
+
         return fetch("/musix/playlists", {
             method: "PATCH",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "text/plain"
             },
-            body: JSON.stringify({
-                playlists: PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists()
-            })
+            body: JSON.stringify(playlists, null, "    ")
         })
             .then(response => response.json())
             .then(response => {

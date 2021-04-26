@@ -1,6 +1,5 @@
 //@ts-check
 import { PanelController } from "./PanelController.js";
-import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
 
 export class NavigationController {
     static cardInterface = null;
@@ -17,6 +16,10 @@ export class NavigationController {
 
         NavigationController.navigationControl.addEventListener("click", () => {
             NavigationController.cardInterface.getController("playback").togglePlay();
+        });
+        NavigationController.navigationControl.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            PanelController.show("#playlistSubmitPanel");
         });
         NavigationController.navigationControl.addEventListener("touchstart", (event) => {
             NavigationController.startNavigation(event);

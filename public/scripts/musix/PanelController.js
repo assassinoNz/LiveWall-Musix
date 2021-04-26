@@ -66,18 +66,18 @@ export class PanelController {
             PanelController.hide();
         });
 
-        //Add onkeyup to searchInput for displaying search results
-        PanelController.view.children[2].children[1].firstElementChild.addEventListener("click", (event) => {
-                PlaylistExplorerController.savePlaylistsToDisk().then(() => {
-                    PanelController.hide();
-                });
-        });
-
-        //Add onkeyup to searchInput for displaying search results
-        PanelController.view.children[3].children[1].firstElementChild.addEventListener("keypress", (event) => {
+        //Add onclick to submitButton for submitting the playlist
+        PanelController.view.children[2].children[1].firstElementChild.addEventListener("keypress", (event) => {
             if (event.key === "Enter") {
                 PlaylistExplorerController.search(event.target.value);
             }
+        });
+        
+        //Add onkeyup to searchInput for displaying search results
+        PanelController.view.children[3].children[1].firstElementChild.addEventListener("click", (event) => {
+                PlaylistExplorerController.savePlaylistsToDisk().then(() => {
+                    PanelController.hide();
+                });
         });
     }
 

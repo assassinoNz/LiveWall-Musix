@@ -14,7 +14,7 @@ export class PlaylistExplorerController {
 
         PlaylistExplorerController.view = viewport;
         PlaylistExplorerController.playlistViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".playlistView");
-        PlaylistExplorerController.trackViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".trackView");
+        PlaylistExplorerController.trackViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".buttonText");
 
         const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
         //Load playlistExplorer

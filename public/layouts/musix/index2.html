@@ -9,6 +9,7 @@
 
     <link rel="icon" type="image/png" href="/musix/images/musix/launcher_192.png">
     <link href="/musix/manifests/musix.webmanifest" rel="manifest" />
+    <link href="/musix/stylesheets/musix/platform.css" rel="stylesheet" />
     <link href="/musix/stylesheets/musix/index2.css" rel="stylesheet" />
 
     <script src="/socket.io/socket.io.js"></script>
@@ -172,12 +173,12 @@
             <div id="sliderContainer">
                 <div id="controlsContainer">
                     <div style="transform: rotate(30deg);">
-                        <button>
+                        <button class="buttonGlyph">
                             <img src="/musix/images/musix/glyph_offline.png" style="transform: rotate(-30deg);" alt="">
                         </button>
                     </div>
                     <div style="transform: rotate(50deg);">
-                        <button>
+                        <button class="buttonGlyph">
                             <img src="/musix/images/musix/glyph_remotePlay.png" style="transform: rotate(-50deg);"
                                 alt="">
                         </button>
@@ -207,7 +208,7 @@
 
         </div>
 
-        <button id="navigationControl">
+        <button class="buttonGlyph" id="navigationControl">
             <img src="/musix/images/musix/glyph_play.png" alt="">
         </button>
     </div>
@@ -215,30 +216,45 @@
 
     <div id="panelContainer" class="popOut" data-last-panel-query="#playlistContextPanel">
         <div id="playlistContextPanel" class="panel popOut" data-playlist-index="0">
-            <h1 style="color: var(--secondaryColor)">Playlist Name</h1>
-            <div><span>Download playlist</span></div>
-            <div><span>Remove playlist from playlists</span></div>
-            <div><span>Continue playlist</span></div>
+            <div class="titleContainer">
+                <h1>Playlist Name</h1>
+            </div>
+            <div class="buttonText"><span>Download playlist</span></div>
+            <div class="buttonText"><span>Remove playlist from playlists</span></div>
+            <div class="buttonText"><span>Continue playlist</span></div>
+            <div class="buttonText"><span class="close">Close</span></div>
         </div>
 
         <div id="trackContextPanel" class="panel popOut" data-playlist-index="0" data-track-index="0">
-            <h1>Playlist Name</h1>
-            <h1 style="color: var(--secondaryColor)">Song Name</h1>
-            <div><span>Download track</span></div>
-            <div><span>Remove track from playlist</span></div>
-            <div><span>Add to QuickPlaylist&trade;</span></div>
+            <div class="titleContainer">
+                <h1>Playlist Name</h1>
+                <h1 style="color: var(--secondaryColor)">Song Name</h1>
+            </div>
+            <div class="buttonText"><span>Download track</span></div>
+            <div class="buttonText"><span>Remove track from playlist</span></div>
+            <div class="buttonText"><span>Add to QuickPlaylist&trade;</span></div>
+            <div class="buttonText"><span class="close">Close</span></div>
         </div>
 
-        <div class="buttonContainer">
-            <span style="background-color: var(--secondaryColor)">Close</span>
+        <div id="searchPanel" class="panel popOut" data-keyword="null">
+            <div class="titleContainer">
+                <h1>Gimme a hint...</h1>
+            </div>
+            <div>
+                <input type="text" />
+            </div>
+            <div class="buttonText"><span class="close">Close</span></div>
         </div>
+
     </div>
 
     <div id="overlayContainer">
         <div id="sourceSelectionOverlay" class="panel">
-            <h1 style="color: var(--secondaryColor)">What will be your source?</h1>
-            <div><span>Use server source</span></div>
-            <div><span>Let me browse the source</span></div>
+            <div class="titleContainer">
+                <h1 style="color: var(--secondaryColor)">Yo, What's the source?</h1>
+            </div>
+            <div class="buttonText"><span>Use server's source</span></div>
+            <div class="buttonText"><span>Let me browse the source</span></div>
         </div>
     </div>
 </body>
@@ -285,7 +301,7 @@
         </div>
     </div>
 
-    <div class="trackView" data-playlist-index="0" data-track-index="0"><span>Track Name</span></div>
+    <div class="buttonText" data-playlist-index="0" data-track-index="0"><span>Track Name</span></div>
 </template>
 
 </html>

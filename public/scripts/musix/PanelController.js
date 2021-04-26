@@ -11,9 +11,10 @@ export class PanelController {
 
         PanelController.view = panelContainer;
 
-        PanelController.view.querySelector(".buttonContainer span").addEventListener("click", () => {
-            PanelController.hide();
-        });
+        //Add onclick to all close buttons for hiding the panelContainer
+        for (const closeButton of PanelController.view.querySelectorAll(".close")) {
+            closeButton.addEventListener("click", PanelController.hide);
+        }
 
         //Add onclick to downloadPlaylistButton for downloading the playlist
         PanelController.view.children[0].children[1].addEventListener("click", () => {
@@ -43,12 +44,12 @@ export class PanelController {
         });
 
         //Add onclick to downloadTrackButton for downloading the track
-        PanelController.view.children[1].children[2].addEventListener("click", () => {
+        PanelController.view.children[1].children[1].addEventListener("click", () => {
             location.href = `/musix/playlists/${PanelController.view.children[1].dataset.playlistIndex}/tracks/${PanelController.view.children[1].dataset.trackIndex}`;
             PanelController.hide();
         });
         //Add onclick to removeTrack button for removing the track from playlist
-        PanelController.view.children[1].children[3].addEventListener("click", () => {
+        PanelController.view.children[1].children[2].addEventListener("click", () => {
             const trackPosition = {
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
                 trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex)
@@ -57,7 +58,7 @@ export class PanelController {
             PanelController.hide();
         });
         //Add onclick to addToQuickPlaylist button for adding the track to quickPlaylist
-        PanelController.view.children[1].children[4].addEventListener("click", () => {
+        PanelController.view.children[1].children[3].addEventListener("click", () => {
             PanelController.cardInterface.getController("musicSource").addToQuickPlaylist(PanelController.cardInterface.getController("musicSource").getTrackAt({
                 trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex),
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
@@ -73,12 +74,12 @@ export class PanelController {
         
         if (panelQuery === "#playlistContextPanel") {
             panel.dataset.playlistIndex = additionalData.playlistIndex;
-            panel.children[0].textContent = additionalData.playlistName;
+            panel.children[0].children[0].textContent = additionalData.playlistName;
         } else if (panelQuery === "#trackContextPanel") {
             panel.dataset.playlistIndex = additionalData.playlistIndex;
             panel.dataset.trackIndex = additionalData.trackIndex;
-            panel.children[0].textContent = additionalData.playlistName;
-            panel.children[1].textContent = additionalData.trackTitle;
+            panel.children[0].children[0].textContent = additionalData.playlistName;
+            panel.children[0].children[1].textContent = additionalData.trackTitle;
         }
         
         PanelController.view.classList.replace("popOut", "popIn");

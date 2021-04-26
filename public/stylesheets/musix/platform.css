@@ -141,6 +141,7 @@ body {
 .inputText > input {
     padding: 10px;
 
+    background-color: var(--backgroundColor);
     border: 5px solid var(--themeColor);
     outline: none;
 

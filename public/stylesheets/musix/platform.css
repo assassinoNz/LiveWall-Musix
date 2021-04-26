@@ -143,4 +143,6 @@ body {
 
     border: 5px solid var(--themeColor);
     outline: none;
+
+    color: var(--negativeColor);
 }

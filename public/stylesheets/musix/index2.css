@@ -275,24 +275,6 @@
     animation-name: popOutPanel;
 }
 
-#overlayContainer {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    width: 100%;
-    height: 100%;
-
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-
-    z-index: 4;
-}
-
 @media (orientation: landscape) {
     #controlsContainer {
         left: auto;

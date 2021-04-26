@@ -61,7 +61,7 @@ export class NavigationController {
             } else {
                 //CASE: y axis must be prioritized
                 if (differenceY > 0) {
-                    NavigationController.navigationControl.firstElementChild.src = "";
+                    NavigationController.navigationControl.firstElementChild.src = "/musix/images/musix/glyph_assign.png";
                     procedureToExecute = () => {
                         NavigationController.switchViewport();
                     };

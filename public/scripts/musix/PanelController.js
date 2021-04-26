@@ -17,18 +17,18 @@ export class PanelController {
         }
 
         //Add onclick to downloadPlaylistButton for downloading the playlist
-        PanelController.view.children[0].children[1].addEventListener("click", () => {
+        PanelController.view.children[0].children[1].firstElementChild.addEventListener("click", () => {
             location.href = `/musix/playlists/${PanelController.view.children[0].dataset.playlistIndex}`;
             PanelController.hide();
         });
         //Add onclick to removePlaylistButton for removing the playlist
-        PanelController.view.children[0].children[2].addEventListener("click", () => {
+        PanelController.view.children[0].children[2].firstElementChild.addEventListener("click", () => {
             const playlistIndex = parseInt(PanelController.view.children[0].dataset.playlistIndex);
             PanelController.cardInterface.getController("musicSource").removePlaylistAt(playlistIndex);
             PanelController.hide();
         });
         //Add onclick to continuePlaylistButton for continuing the playlist
-        PanelController.view.children[0].children[3].addEventListener("click", () => {
+        PanelController.view.children[0].children[3].firstElementChild.addEventListener("click", () => {
             const playlistIndex = parseInt(PanelController.view.children[0].dataset.playlistIndex);
             PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(playlistIndex));
             if (localStorage.getItem(playlistIndex.toString())) {
@@ -44,12 +44,12 @@ export class PanelController {
         });
 
         //Add onclick to downloadTrackButton for downloading the track
-        PanelController.view.children[1].children[1].addEventListener("click", () => {
+        PanelController.view.children[1].children[1].firstElementChild.addEventListener("click", () => {
             location.href = `/musix/playlists/${PanelController.view.children[1].dataset.playlistIndex}/tracks/${PanelController.view.children[1].dataset.trackIndex}`;
             PanelController.hide();
         });
         //Add onclick to removeTrackButton for removing the track from playlist
-        PanelController.view.children[1].children[2].addEventListener("click", () => {
+        PanelController.view.children[1].children[2].firstElementChild.addEventListener("click", () => {
             const trackPosition = {
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
                 trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex)
@@ -58,15 +58,23 @@ export class PanelController {
             PanelController.hide();
         });
         //Add onclick to addToQuickPlaylistButton for adding the track to quickPlaylist
-        PanelController.view.children[1].children[3].addEventListener("click", () => {
+        PanelController.view.children[1].children[3].firstElementChild.addEventListener("click", () => {
             PanelController.cardInterface.getController("musicSource").addToQuickPlaylist(PanelController.cardInterface.getController("musicSource").getTrackAt({
                 trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex),
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
             }));
             PanelController.hide();
         });
+
         //Add onkeyup to searchInput for displaying search results
-        PanelController.view.children[2].children[1].addEventListener("keypress", (event) => {
+        PanelController.view.children[2].children[1].firstElementChild.addEventListener("click", (event) => {
+                PlaylistExplorerController.savePlaylistsToDisk().then(() => {
+                    PanelController.hide();
+                });
+        });
+
+        //Add onkeyup to searchInput for displaying search results
+        PanelController.view.children[3].children[1].firstElementChild.addEventListener("keypress", (event) => {
             if (event.key === "Enter") {
                 PlaylistExplorerController.search(event.target.value);
             }

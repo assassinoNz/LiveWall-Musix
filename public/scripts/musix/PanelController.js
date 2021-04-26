@@ -69,6 +69,7 @@ export class PanelController {
         //Add onclick to submitButton for submitting the playlist
         PanelController.view.children[2].children[1].firstElementChild.addEventListener("keypress", (event) => {
             if (event.key === "Enter") {
+                event.target.blur();
                 PlaylistExplorerController.search(event.target.value);
             }
         });

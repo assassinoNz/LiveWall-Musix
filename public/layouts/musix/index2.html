@@ -93,13 +93,13 @@
                     this.playbackController.seekTo(details.seekTime);
                 });
 
-                const overlayContainer = document.getElementById("overlayContainer");
-                overlayContainer.firstElementChild.children[1].addEventListener("click", () => {
-                    this.init(false);
-                });
-                overlayContainer.firstElementChild.children[2].addEventListener("click", () => {
-                    this.init(true);
-                });
+                // const overlayContainer = document.getElementById("overlayContainer");
+                // overlayContainer.firstElementChild.children[1].addEventListener("click", () => {
+                //     this.init(false);
+                // });
+                // overlayContainer.firstElementChild.children[2].addEventListener("click", () => {
+                //     this.init(true);
+                // });
 
                 this.retrieveControls[0].addEventListener("click", (event) => {
                     this.playbackController.skipTrack("previous");
@@ -117,7 +117,7 @@
                     if (event.key === 'Enter') {
                         Utility.toggleButtonGlyph(this.retrieveControls[3]);
                         if (event.currentTarget.value !== "") {
-                            this.playlistExplorerController.search(event.currentTarget.value);
+                            PlaylistExplorerController.search(event.currentTarget.value);
                         }
                     }
                 });
@@ -130,8 +130,10 @@
             init(offline) {
                 //Initialize independent static controllers
                 PanelController.init(this, document.getElementById("panelContainer"));
+                PanelController.hide();
                 NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
                 NavigationController.init(this, document.getElementById("viewportContainer"));
+                
 
                 this.musicSourceController.setOffline(offline).then(() => {
                     //Initialize dependent static controllers
@@ -214,7 +216,7 @@
     </div>
 
 
-    <div id="panelContainer" class="popOut" data-last-panel-query="#playlistContextPanel">
+    <div id="panelContainer" class="popIn" data-last-panel-query="#sourceSelectionPanel">
         <div id="playlistContextPanel" class="panel popOut" data-playlist-index="0">
             <div class="titleContainer">
                 <h1>Playlist Name</h1>
@@ -249,15 +251,12 @@
             <div class="buttonText"><span class="close">Close</span></div>
         </div>
 
-    </div>
-
-    <div id="overlayContainer">
-        <div id="sourceSelectionOverlay" class="panel">
+        <div id="sourceSelectionPanel" class="panel popIn">
             <div class="titleContainer">
                 <h1 style="color: var(--secondaryColor)">Yo, What's the source?</h1>
             </div>
-            <div class="buttonText"><span>Use server's source</span></div>
-            <div class="buttonText"><span>Let me browse the source</span></div>
+            <div class="buttonText"><span onclick="window.cardInterface.init(false);">Use server's source</span></div>
+            <div class="buttonText"><span onclick="window.cardInterface.init(true);">Let me browse the source</span></div>
         </div>
     </div>
 </body>

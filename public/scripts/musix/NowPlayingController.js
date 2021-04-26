@@ -49,7 +49,6 @@ export class NowPlayingController {
     static setState(state, value) {
         switch (state) {
             case "offline": {
-                document.getElementById("overlayContainer").style.display = "none";
                 if (value) {
                     NowPlayingController.controls[0].classList.add("active");
                     NowPlayingController.controls[1].style.display = "none";

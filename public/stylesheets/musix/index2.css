@@ -303,7 +303,7 @@ img {
     width: 100%;
     padding: 0 0 0 10px;
 
-    font-size: 350%;
+    font-size: 300%;
     writing-mode: vertical-lr;
     color: var(--themeColor);
 
@@ -399,7 +399,7 @@ img {
 .panel > h1 {
     width: 100%;
 
-    font-size: 350%;
+    font-size: 300%;
     color: var(--themeColor);
 }
 

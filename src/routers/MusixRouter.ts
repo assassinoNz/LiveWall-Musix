@@ -16,15 +16,15 @@ musixRouter: Middleware Setup
 musixRouter.use(express.static(__dirname + "/../../public"));
 
 //Set static directory for music files
-let staticDirectoryPath = null;
+let MUSIC_DIR = null;
 if (process.platform === "android") {
-    staticDirectoryPath = "/storage/3ACD-101B/Music";
+    MUSIC_DIR = "/storage/3ACD-101B/Music";
 } else if (process.platform === "linux") {
-    staticDirectoryPath = "/home/assassino/Music";
+    MUSIC_DIR = "/home/assassino/Music";
 } else if (process.platform === "win32") {
-    staticDirectoryPath = "C:/Users/assassino/Music";
+    MUSIC_DIR = "C:/Users/assassino/Music";
 }
-musixRouter.use(express.static(staticDirectoryPath));
+musixRouter.use(express.static(MUSIC_DIR));
 /*
 =====================================================================================
 musixRouter: Route Handlers Setup
@@ -45,11 +45,11 @@ musixRouter.route("/playlists")
     .get((req, res) => {
         res.json({
             status: true,
-            data: JSON.parse(fs.readFileSync(staticDirectoryPath + "/Registries/playlists.json", "utf-8"))
+            data: JSON.parse(fs.readFileSync(MUSIC_DIR + "/Registries/playlists.json", "utf-8"))
         });
     })
     .patch(express.json({ limit: 1000000 }), (req, res) => {
-        fs.writeFileSync(staticDirectoryPath + "/Registries/playlists.json", JSON.stringify(req.body.playlists, null, "    "));
+        fs.writeFileSync(MUSIC_DIR + "/Registries/playlists.json", JSON.stringify(req.body.playlists, null, "    "));
 
         res.json({
             status: true
@@ -127,7 +127,7 @@ musixRouter.route("/playlists")
 
 musixRouter.route("/playlists/:playlistIndex")
     .get((req, res) => {
-        const playlists = JSON.parse(fs.readFileSync("src/registries/musix/playlists.json", "utf-8"));
+        const playlists = JSON.parse(fs.readFileSync(MUSIC_DIR + "/Registries/playlists.json", "utf-8"));
         const playlistIndex = parseInt(req.params.playlistIndex);
 
         if (playlistIndex >= playlists.length) {
@@ -159,7 +159,7 @@ musixRouter.route("/playlists/:playlistIndex")
             });
 
             for (const track of tracks) {
-                archive.file(`${staticDirectoryPath}/${track.path}`, {
+                archive.file(`${MUSIC_DIR}/${track.path}`, {
                     name: track.path.slice(track.path.lastIndexOf("/") + 1)
                 });
             }
@@ -172,7 +172,7 @@ musixRouter.route("/playlists/:playlistIndex")
 
 musixRouter.route("/playlists/:playlistIndex/tracks/:trackIndex")
     .get((req, res) => {
-        const playlists = JSON.parse(fs.readFileSync("src/registries/musix/playlists.json", "utf-8"));
+        const playlists = JSON.parse(fs.readFileSync(MUSIC_DIR + "/Registries/playlists.json", "utf-8"));
         const playlistIndex = parseInt(req.params.playlistIndex);
         const trackIndex = parseInt(req.params.trackIndex);
 
@@ -191,7 +191,7 @@ musixRouter.route("/playlists/:playlistIndex/tracks/:trackIndex")
                 }
             });
         } else {
-            res.download(`${staticDirectoryPath}/${playlists[playlistIndex].tracks[trackIndex].path}`);
+            res.download(`${MUSIC_DIR}/${playlists[playlistIndex].tracks[trackIndex].path}`);
         }
     });
 

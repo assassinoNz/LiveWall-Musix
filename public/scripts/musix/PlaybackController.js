@@ -11,7 +11,6 @@ export class PlaybackController {
     //NOTE: RemoteOnly turns the master device into a mere remote controller. No activity will be executed on the master device.
     remoteOnly = false;
 
-    playlist = {};
     boundedHandlers = {
         startSeek: this.startSeek.bind(this),
         handleTimeUpdate: this.handleTimeUpdate.bind(this)
@@ -76,8 +75,7 @@ export class PlaybackController {
 
         //Reinstate mediaController to last position
         this.setVolume(parseFloat(localStorage.getItem("currentVolume")));
-        this.setPlaylist(this.cardInterface.getController("musicSource").getPlaylistAt(parseInt(localStorage.getItem("currentPlaylistIndex"))));
-        this.loadTrackAt(parseInt(localStorage.getItem("currentTrackIndex")), false);
+        this.loadTrack({ playlistIndex: parseInt(localStorage.getItem("currentPlaylistIndex")), trackIndex: parseInt(localStorage.getItem("currentTrackIndex")) }, false);
     }
 
     setRemotePlay(remotePlay) {
@@ -180,39 +178,21 @@ export class PlaybackController {
         }
     }
 
-    setPlaylist(playlist) {
+    loadTrack(trackPosition, autoplay) {
         //NOTE: Only set the new playlist when it has a different index
-        if (this.playlist.index !== playlist.index) {
-            //CASE: New playlist and the current playlist aren't the same
-            if (this.remotePlay) {
-                //CASE: RemotePlay is enabled
-                this.cardInterface.getWebSocket().emit("broadcast-event", {
-                    eventName: "remote-set-playlist",
-                    playlist: playlist
-                });
-            }
-    
-            //NOTE: Setting playlist locally must be ignored when RemoteOnly is enabled
-            if (!this.remoteOnly) {
-                //CASE: RemoteOnly is disabled
-                this.playlist = playlist;
-    
-                //Update playback state
-                localStorage.setItem("currentPlaylistIndex", playlist.index.toString());
-    
-                //Update UI
-                NowPlayingController.updateViewSection("playlist", playlist);
-            }
+        if (parseInt(localStorage.getItem("currentPlaylistIndex")) !== trackPosition.playlistIndex) {
+            //Update playback state
+            localStorage.setItem("currentPlaylistIndex", trackPosition.playlistIndex.toString());
+
+            //Update UI
+            NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
         }
 
-    }
-
-    loadTrackAt(trackIndex, autoplay) {
         if (this.remotePlay) {
             //CASE: RemotePlay is enabled
             this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-load-track-at",
-                trackIndex: trackIndex,
+                eventName: "remote-load-track",
+                trackPosition: trackPosition,
                 autoplay: autoplay
             });
         }
@@ -220,32 +200,10 @@ export class PlaybackController {
         //NOTE: Loading tracks locally must be ignored when RemoteOnly is enabled
         if (!this.remoteOnly) {
             //CASE: RemoteOnly is disabled
-            const track = this.playlist.tracks[trackIndex];
-
-            //Request lyrics if a URI is present
-            // const lyricsDisplay = this.view.querySelector("#lyricsDisplay");
-            // lyricsDisplay.scrollTo(0, 0);
-            // if (track.lyricsFileName) {
-            //     fetch(`/musix/lyrics/${encodeURIComponent(track.lyricsFileName)}`)
-            //         .then(response => response.json())
-            //         .then(data => {
-            //             for (let i = 0; i < data.blocks.length; i++) {
-            //                 if (data.blocks[i][0].startsWith("Chorus") || data.blocks[i][0].startsWith("(x")) {
-            //                     data.blocks[i][0] = `<span style="color: var(--themeColor)">${data.blocks[i][0]}</span>`;
-            //                 }
-            //                 data.blocks[i] = data.blocks[i].join("<br />");
-            //             }
-            //             lyricsDisplay.innerHTML = data.blocks.join("<br /><br />");
-            //         })
-            //         .catch(() => {
-            //             lyricsDisplay.innerHTML = '<span style="color: var(--themeColor)">Aw! Snap</span><br />Couldn\'t connect with the server';
-            //         });
-            // } else {
-            //     lyricsDisplay.innerHTML = "";
-            // }
+            const track = this.cardInterface.getController("musicSource").getTrackAt(trackPosition);
 
             //Update mediaController
-            this.cardInterface.getController("musicSource").determineTrackUrl(track).then((trackUrl) => {
+            this.cardInterface.getController("musicSource").determineTrackUrl(trackPosition).then((trackUrl) => {
                 this.mediaController.src = trackUrl;
                 this.mediaController.currentTime = 0;
 
@@ -258,7 +216,7 @@ export class PlaybackController {
             const mediaMetadata = {
                 title: track.title,
                 artist: track.artist,
-                album: this.playlist.name
+                album: this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name
             };
 
             if (track.artist) {
@@ -274,8 +232,8 @@ export class PlaybackController {
             }
 
             //Update playback state
-            localStorage.setItem("currentTrackIndex", trackIndex.toString());
-            localStorage.setItem(localStorage.getItem("currentPlaylistIndex"), trackIndex.toString());
+            localStorage.setItem("currentTrackIndex", trackPosition.trackIndex.toString());
+            localStorage.setItem(this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name, trackPosition.trackIndex.toString());
 
             //Update UI
             NowPlayingController.updateViewSection("track", mediaMetadata);
@@ -326,15 +284,12 @@ export class PlaybackController {
                 direction: direction
             });
         }
-        
+
         //NOTE: Skipping tracks locally must be ignored when RemoteOnly is enabled
         if (!this.remoteOnly) {
             const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
 
-            const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(upcomingTrackPosition.playlistIndex);
-            this.setPlaylist(playlist);
-
-            this.loadTrackAt(upcomingTrackPosition.trackIndex, true);
+            this.loadTrack(upcomingTrackPosition, true);
 
             navigator.vibrate(100);
         }

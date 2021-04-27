@@ -56,12 +56,8 @@ export class MusicSourceController {
                     this.cardInterface.getController("playback").setVolume(params.volume);
                 });
 
-                window.socket.on("remote-set-playlist", (params) => {
-                    this.cardInterface.getController("playback").setPlaylist(params.playlist);
-                });
-
-                window.socket.on("remote-load-track-at", (params) => {
-                    this.cardInterface.getController("playback").loadTrackAt(params.trackIndex, params.autoplay);
+                window.socket.on("remote-load-track", (params) => {
+                    this.cardInterface.getController("playback").loadTrack(params.trackPosition, params.autoplay);
                 });
 
                 window.socket.on("remote-skip-track", (params) => {
@@ -129,40 +125,60 @@ export class MusicSourceController {
         return this.playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex];
     }
 
+    appendPlaylist(newPlaylist) {
+        const assignedPlaylistIndex = this.playlists.push(newPlaylist) - 1;
+        //Randomize themeColor
+        newPlaylist.themeColor = Utility.getRandColor(100, 255);
+
+        //Update UI
+        PlaylistExplorerController.appendPlaylistView(assignedPlaylistIndex);
+
+        return assignedPlaylistIndex;
+    }
+
+    appendTrackToPlaylist(playlistIndex, track) {
+        const assignedTrackIndex = this.playlists[playlistIndex].tracks.push(track) - 1;
+
+        //Update UI
+        PlaylistExplorerController.appendTrackView({
+            playlistIndex: playlistIndex,
+            trackIndex: assignedTrackIndex
+        });
+
+        return assignedTrackIndex;
+    }
+
     removePlaylistAt(playlistIndex) {
-        this.playlists[playlistIndex] = null;
+        this.playlists.slice(playlistIndex, 1);
 
         //Update UI
         PlaylistExplorerController.removePlaylistView(playlistIndex);
     }
 
     removeTrackAt(trackPosition) {
-        this.playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex] = null;
+        this.playlists[trackPosition.playlistIndex].tracks.slice(trackPosition.trackIndex, 1);
 
         //Update UI
         PlaylistExplorerController.removeTrackView(trackPosition);
 
-        //Remove the playlist if all tracks are null
-        let allTracksRemoved = true;
-        for (let i = 0; i < this.playlists[trackPosition.playlistIndex].tracks.length; i++) {
-            if (this.playlists[trackPosition.playlistIndex].tracks[i] !== null) {
-                allTracksRemoved = false;
-                break;
-            }
-        }
-
-        if (allTracksRemoved) {
+        //Remove the playlist if all tracks are removed
+        if (this.playlists[trackPosition.playlistIndex].tracks.length === 0) {
             this.removePlaylistAt(trackPosition.playlistIndex);
         }
     }
 
-    async determineTrackUrl(track) {
+    moveTrack(trackPosition, toTrackPosition) {
+        const fromTrack = this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 1)[0];
+        this.playlists[toTrackPosition.playlistIndex].tracks.splice(toTrackPosition.trackIndex, 0, fromTrack);
+    }
+
+    async determineTrackUrl(trackPosition) {
         if (this.offline) {
             if (this.latestTrackUrl) {
                 URL.revokeObjectURL(this.latestTrackUrl);
             }
 
-            const trackPathParts = track.path.split("/");
+            const trackPathParts = this.playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].path.split("/");
             const trackFileHandle = await (await this.rootDirectoryHandle.getDirectoryHandle(trackPathParts[0])).getFileHandle(trackPathParts[1]);
             const trackFile = await trackFileHandle.getFile();
 
@@ -170,45 +186,30 @@ export class MusicSourceController {
             return this.latestTrackUrl;
 
         } else {
-            return track.path;
+            return this.playlists[trackPosition.playlistIndex].tracks[trackPosition.trackIndex].path;
         }
     }
 
     queryRelativePlaylistPosition(relativity) {
         const currentPlaylistIndex = parseInt(localStorage.getItem("currentPlaylistIndex"));
 
-        let possiblePlaylistIndex = -1;
-
         if (relativity === "next") {
-            if (currentPlaylistIndex === this.playlists.length - 1) {
-                //CASE: Current playlist is the final playlist
-                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, 0, this.playlists.length - 1);
+            if (currentPlaylistIndex === this.playlists.length) {
+                //CASE: Current playlist is the last playlist
+                return 0;
             } else {
-                //CASE: Current playlist is the not the final playlist
-                possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, currentPlaylistIndex + 1, this.playlists.length - 1);
-
-                if (possiblePlaylistIndex === -1) {
-                    //CASE: Still no playlist is found
-                    possiblePlaylistIndex = Utility.findFirstNonNullIndex(this.playlists, 0, currentPlaylistIndex);
-                }
+                //CASE: Current playlist is not the last playlist
+                return currentPlaylistIndex + 1;
             }
         } else if (relativity === "previous") {
             if (currentPlaylistIndex === 0) {
                 //CASE: Current playlist is the first playlist
-                possiblePlaylistIndex = Utility.findLastNonNullIndex(this.playlists, 0, this.playlists.length - 1);
+                return this.playlists.length - 1;
             } else {
                 //CASE: Current playlist is not the first playlist
-                possiblePlaylistIndex = Utility.findLastNonNullIndex(this.playlists, 0, currentPlaylistIndex - 1);
-
-                if (possiblePlaylistIndex === -1) {
-                    //CASE: Still no playlist is found
-                    possiblePlaylistIndex = Utility.findLastNonNullIndex(this.playlists, currentPlaylistIndex, this.playlists.length - 1);
-                }
+                return currentPlaylistIndex - 1;
             }
-
         }
-
-        return possiblePlaylistIndex;
     }
 
     queryRelativeTrackPosition(relativity) {
@@ -216,120 +217,85 @@ export class MusicSourceController {
         const currentTrackIndex = parseInt(localStorage.getItem("currentTrackIndex"));
         const currentPlaylist = this.playlists[currentPlaylistIndex];
 
-        const possibleTrackPosition = {
+        const upcomingTrackPosition = {
             playlistIndex: -1,
             trackIndex: -1
         };
 
-        if (currentPlaylist !== null && relativity === "next") {
+        if (relativity === "next") {
             if (currentTrackIndex === currentPlaylist.tracks.length - 1) {
-                //CASE: Now playing is the final track
-                possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                //CASE: Now playing is the final track;
+                upcomingTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                upcomingTrackPosition.trackIndex = 0;
             } else {
                 //CASE: Now playing is not the final track
-                possibleTrackPosition.playlistIndex = currentPlaylistIndex;
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, currentTrackIndex + 1, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
-
-                if (possibleTrackPosition.trackIndex === null) {
-                    //CASE: Still no track is found
-                    possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                    possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, currentTrackIndex);
-                }
+                upcomingTrackPosition.playlistIndex = currentPlaylistIndex;
+                upcomingTrackPosition.trackIndex = currentTrackIndex + 1;
             }
-        } else if (currentPlaylist !== null && relativity === "previous") {
+        } else if (relativity === "previous") {
             if (currentTrackIndex === 0) {
                 //CASE: Now playing is the first track
-                possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                upcomingTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                upcomingTrackPosition.trackIndex = this.playlists[upcomingTrackPosition.playlistIndex].tracks.length - 1;
             } else {
                 //CASE: Now playing is not the first track
-                possibleTrackPosition.playlistIndex = currentPlaylistIndex;
-                possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, currentTrackIndex - 1);
-
-                if (possibleTrackPosition.trackIndex === null) {
-                    //CASE: Still no track is found
-                    possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-                    possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, currentTrackIndex, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
-                }
-            }
-        } else if (currentPlaylist === null) {
-            possibleTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
-
-            if (relativity === "next") {
-                possibleTrackPosition.trackIndex = Utility.findFirstNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
-            } else if (relativity === "previous") {
-                possibleTrackPosition.trackIndex = Utility.findLastNonNullIndex(this.playlists[possibleTrackPosition.playlistIndex].tracks, 0, this.playlists[possibleTrackPosition.playlistIndex].tracks.length - 1);
+                upcomingTrackPosition.playlistIndex = currentPlaylistIndex;
+                upcomingTrackPosition.trackIndex = currentTrackIndex - 1;
             }
         }
 
-        return possibleTrackPosition;
-    }
-
-    appendPlaylist(playlist) {
-        const assignedPlaylistIndex = this.playlists.push(playlist) - 1;
-        playlist.index = assignedPlaylistIndex;
-        //Randomize themeColor
-        playlist.themeColor = Utility.getRandColor(100, 255);
-
-        PlaylistExplorerController.appendNewPlaylistView(playlist);
-
-        return assignedPlaylistIndex;
-    }
-
-    appendTrackToPlaylist(playlist, track) {
-        const assignedTrackIndex = playlist.tracks.push(track) - 1;
-
-        PlaylistExplorerController.appendNewTrackView(playlist, {
-            playlistIndex: playlist.index,
-            trackIndex: assignedTrackIndex
-        });
-
-        return assignedTrackIndex;
+        return upcomingTrackPosition;
     }
 
     addToQuickPlaylist(track) {
         if (localStorage.getItem("quickPlaylistIndex") === "-1") {
             //CASE: There is no quick playlist created
             //Create the quick playlist in the playlists[]
-            const quickPlaylist = MusicSourceController.createNewPlaylist("Quick Playlist", track);
+            const quickPlaylist = {
+                name: "Quick ColorBand",
+                themeColor: Utility.getRandColor(100, 255),
+                tracks: [
+                    track
+                ]
+            };
             const quickPlaylistIndex = this.appendPlaylist(quickPlaylist);
             localStorage.setItem("quickPlaylistIndex", quickPlaylistIndex.toString());
             //Ask to begin playback of quickPlaylist
             if (window.frameElement) {
                 window.parent.shellInterface.throwAlert("Got a question", "Do you want to start QuickPlaylist now?", "Tap YES if you want to start playback of the QuickPlaylist immediately. Otherwise tap on NO", null, "YES", "NO").then(() => {
-                    this.cardInterface.getController("playback").setPlaylist(quickPlaylist);
-                    this.cardInterface.getController("playback").loadTrackAt(0, true);
+                    this.cardInterface.getController("playback").loadTrack({playlistIndex: quickPlaylistIndex, trackIndex: 0}, true);
                 }, () => {
                     //Do nothing here
                 });
             } else {
                 if (confirm("Do you want to start playback of QuickPlaylist now?")) {
-                    this.cardInterface.getController("playback").setPlaylist(quickPlaylist);
-                    this.cardInterface.getController("playback").loadTrackAt(0, true);
+                    this.cardInterface.getController("playback").loadTrack({playlistIndex: quickPlaylistIndex, trackIndex: 0}, true);
                 };
             }
         } else {
             //CASE: There is a quick playlist created
-            const quickPlaylistIndex = parseInt(localStorage.getItem("quickPlaylistIndex"));
-            const quickPlaylist = this.playlists[quickPlaylistIndex];
             //Add the specified track as the last track of the quick playlist
-            this.appendTrackToPlaylist(quickPlaylist, track);
+            this.appendTrackToPlaylist(parseInt(localStorage.getItem("quickPlaylistIndex")), track);
         }
     }
 
-    static createNewPlaylist(playlistName, initialTrack) {
-        //Initialize a new playlist
-        const newPlaylist = {
-            name: playlistName,
-            themeColor: Utility.getRandColor(100, 255),
-            index: null,
-            tracks: [
+    exportPlaylists() {
+        if (localStorage.getItem("quickPlaylistIndex") !== "-1") {
+            //CASE: There is a quick playlist created
+            //Remove it
+            this.playlists.splice(parseInt(localStorage.getItem("quickPlaylistIndex")), 1);
+        }
 
-            ]
-        };
-        newPlaylist.tracks.push(initialTrack);
-
-        return newPlaylist;
+        return fetch("/musix/playlists", {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: JSON.stringify(this.playlists, null, "    ")
+        })
+            .then(response => response.json())
+            .then(response => {
+                return response.status;
+            });
     }
 }

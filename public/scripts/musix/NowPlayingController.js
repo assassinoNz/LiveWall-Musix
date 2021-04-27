@@ -104,8 +104,9 @@ export class NowPlayingController {
             }
 
             case "playlist": {
-                NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = value.name;
-                document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", value.themeColor);
+                const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(value);
+                NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = playlist.name;
+                document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", playlist.themeColor);
                 
                 //Update media session
                 navigator.mediaSession.metadata.artwork = [

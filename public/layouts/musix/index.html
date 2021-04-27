@@ -115,10 +115,6 @@
                     this.nowPlayingController.setVolume(params.volume);
                 });
 
-                window.socket.on("remote-set-playlist", (params) => {
-                    this.nowPlayingController.setPlaylist(params.playlist);
-                });
-
                 window.socket.on("remote-load-track-at", (params) => {
                     this.nowPlayingController.loadTrackAt(params.trackIndex);
                 });

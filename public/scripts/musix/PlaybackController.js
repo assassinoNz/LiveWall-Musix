@@ -7,6 +7,11 @@ export class PlaybackController {
 
     //NOTE: RemotePlay mirrors all the activity of the master device in all the slave devices
     remotePlay = false;
+    relativeTrackPositions = {
+        previous: {},
+        current: {},
+        next: {}
+    };
 
     boundedHandlers = {
         startSeek: this.startSeek.bind(this),
@@ -25,23 +30,16 @@ export class PlaybackController {
             //CASE: Doesn't have a playback state
             //Playback state parameters must be initialized
             localStorage.setItem("hasPlaybackState", "true");
-            localStorage.setItem("currentPlaylistIndex", "0");
-            localStorage.setItem("currentTrackIndex", "0");
-            localStorage.setItem("currentVolume", "0.5");
+            localStorage.setItem("currentVolume", "1");
+
+            //NOTE: quickPlaylistIndex must always be -1 in the beginning
+            localStorage.setItem("quickPlaylistIndex", "-1");
         }
-        if (parseInt(localStorage.getItem("currentPlaylistIndex")) >= this.cardInterface.getController("musicSource").getPlaylists().length) {
-            //CASE: User had a custom playlist in the previous session
-            //Current playlistIndex, trackIndex and trackTime must be reset because there is no quickPlaylist in this session and we cannot continue it
-            //Choose a random playlistIndex as currentPlaylistIndex
-            localStorage.setItem("currentPlaylistIndex", Utility.getRandInt(0, this.cardInterface.getController("musicSource").getPlaylists().length).toString());
-            localStorage.setItem("currentTrackIndex", "0");
-        }
-        //NOTE: quickPlaylistIndex must always be -1 in the beginning
-        localStorage.setItem("quickPlaylistIndex", "-1");
 
         //Add eventListeners to the mediaController and seekSlider
         this.mediaController.addEventListener("loadstart", () => {
             //Remove ability to seek
+            NowPlayingController.setState("playback", false);
             NowPlayingController.seekSlider.removeEventListener("pointerdown", this.boundedHandlers.startSeek);
         });
         this.mediaController.addEventListener("canplay", () => {
@@ -72,7 +70,7 @@ export class PlaybackController {
 
         //Reinstate mediaController to last position
         this.setVolume(parseFloat(localStorage.getItem("currentVolume")));
-        this.loadTrack({ playlistIndex: parseInt(localStorage.getItem("currentPlaylistIndex")), trackIndex: parseInt(localStorage.getItem("currentTrackIndex")) }, false);
+        this.loadTrack({ playlistIndex: 0, trackIndex: 0 }, false);
     }
 
     setRemotePlay(remotePlay) {
@@ -118,6 +116,15 @@ export class PlaybackController {
             //CASE: RemoteOnly is disabled
             this.setRemoteOnly(true);
         }
+    }
+
+    setRelativeTrackPositions(trackPositions) {
+        this.relativeTrackPositions.previous = trackPositions.previous;
+        this.relativeTrackPositions.next = trackPositions.next;
+    }
+
+    getRelativeTrackPositions() {
+        return this.relativeTrackPositions;
     }
 
     seekTo(time) {
@@ -168,25 +175,26 @@ export class PlaybackController {
             });
         } else {
             //CASE: RemotePlay is disabled
+            this.relativeTrackPositions.previous = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(trackPosition, "previous");
+            this.relativeTrackPositions.current = trackPosition;
+            this.relativeTrackPositions.next = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(trackPosition, "next");
+
             //NOTE: Only set the playlist styling when the playlist differs from the current playlist
             if (parseInt(localStorage.getItem("currentPlaylistIndex")) !== trackPosition.playlistIndex) {
                 //Update playback state
                 localStorage.setItem("currentPlaylistIndex", trackPosition.playlistIndex.toString());
-
+                
                 //Update UI
                 NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
             }
-
+            
             const track = this.cardInterface.getController("musicSource").getTrackAt(trackPosition);
-    
+            
             //Update mediaController
             this.cardInterface.getController("musicSource").determineTrackUrl(trackPosition).then((trackUrl) => {
+                this.mediaController.autoplay = autoplay;
                 this.mediaController.src = trackUrl;
                 this.mediaController.currentTime = 0;
-    
-                if (autoplay) {
-                    this.mediaController.play();
-                }
             });
     
             //Calculate media metadata
@@ -241,9 +249,11 @@ export class PlaybackController {
                 direction: direction
             });
         } else {
-            const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
-    
-            this.loadTrack(upcomingTrackPosition, false);
+            if (direction === "next") {
+                this.loadTrack(this.relativeTrackPositions.next, true);
+            } else if (direction === "previous") {
+                this.loadTrack(this.relativeTrackPositions.previous, true);
+            }
     
             navigator.vibrate(100);
         }

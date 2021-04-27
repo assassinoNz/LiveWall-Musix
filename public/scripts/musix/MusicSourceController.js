@@ -55,15 +55,15 @@ export class MusicSourceController {
                 window.socket.on("remote-set-volume", (params) => {
                     this.cardInterface.getController("playback").setVolume(params.volume);
                 });
-            
+
                 window.socket.on("remote-load-track", (params) => {
                     this.cardInterface.getController("playback").loadTrack(params.trackPosition, params.autoplay);
                 });
-            
+
                 window.socket.on("remote-toggle-play", (params) => {
                     this.cardInterface.getController("playback").togglePlay();
                 });
-            
+
                 window.socket.on("remote-skip-track", (params) => {
                     this.cardInterface.getController("playback").skipTrack(params.direction);
                 });
@@ -143,12 +143,54 @@ export class MusicSourceController {
     removePlaylistAt(playlistIndex) {
         this.playlists.splice(playlistIndex, 1);
 
+        const relativeTrackPositions = this.cardInterface.getController("playback").getRelativeTrackPositions();
+        
+        if (playlistIndex === relativeTrackPositions.current.playlistIndex) {
+            //Try to load the first track of the new playlist at currentPlaylistIndex
+            if (this.playlists[relativeTrackPositions.current.playlistIndex]) {
+                //CASE: There is a new playlist at the currentPlaylistIndex
+                //Load its firstTrack
+                this.cardInterface.getController("playback").loadTrack({ playlistIndex: relativeTrackPositions.current.playlistIndex, trackIndex: 0 }, false);
+            } else {
+                //CASE: There is no playlist at the currentPlaylistIndex
+                //Load the first track of the first playlist
+                this.cardInterface.getController("playback").loadTrack({ playlistIndex: 0, trackIndex: 0 }, false);
+            }
+        } else if (playlistIndex === relativeTrackPositions.previous.playlistIndex) {
+            //CASE: Removed playlist is the relativePreviousPlaylist
+            //currentPlaylistIndex becomes the previousPlaylistIndex
+            relativeTrackPositions.current.playlistIndex = relativeTrackPositions.previous.playlistIndex;
+            //Recalculate the relativePreviousTrack
+            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "previous");
+        } else if (playlistIndex === relativeTrackPositions.next.playlistIndex) {
+            //CASE: Removed playlist is the relativeNextPlaylist
+            //Recalculate the relativeNextTrack
+            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "next");
+        }
+
         //Update UI
         PlaylistExplorerController.removePlaylistView(playlistIndex);
     }
 
     removeTrackAt(trackPosition) {
         this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 1);
+
+        const relativeTrackPositions = this.cardInterface.getController("playback").getRelativeTrackPositions();
+        if (trackPosition.playlistIndex === relativeTrackPositions.previous.playlistIndex && trackPosition.trackIndex === relativeTrackPositions.previous.trackIndex) {
+            //CASE: Removed track is the relativePreviousTrack
+            //Current track becomes the previous track
+            relativeTrackPositions.current = relativeTrackPositions.previous;
+            //Recalculate the relativePreviousTrack
+            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "previous");
+        } else if (trackPosition.playlistIndex === relativeTrackPositions.current.playlistIndex && trackPosition.trackIndex === relativeTrackPositions.current.trackIndex) {
+            //CASE: Removed track is the currentTrack
+            //Load the recalculated next track of the previous track
+            this.cardInterface.getController("playback").loadTrack(this.queryRelativeTrackPosition(relativeTrackPositions.previous, "next"), false);
+        } else if (trackPosition.playlistIndex === relativeTrackPositions.next.playlistIndex && trackPosition.trackIndex === relativeTrackPositions.next.trackIndex) {
+            //CASE: Removed track is the relativeNextTrack
+            //Recalculate the relativeNextTrack
+            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "next");
+        }
 
         //Update UI
         PlaylistExplorerController.removeTrackView(trackPosition);
@@ -182,9 +224,7 @@ export class MusicSourceController {
         }
     }
 
-    queryRelativePlaylistPosition(relativity) {
-        const currentPlaylistIndex = parseInt(localStorage.getItem("currentPlaylistIndex"));
-
+    queryRelativePlaylistPosition(currentPlaylistIndex, relativity) {
         if (relativity === "next") {
             if (currentPlaylistIndex === this.playlists.length) {
                 //CASE: Current playlist is the last playlist
@@ -204,10 +244,8 @@ export class MusicSourceController {
         }
     }
 
-    queryRelativeTrackPosition(relativity) {
-        const currentPlaylistIndex = parseInt(localStorage.getItem("currentPlaylistIndex"));
-        const currentTrackIndex = parseInt(localStorage.getItem("currentTrackIndex"));
-        const currentPlaylist = this.playlists[currentPlaylistIndex];
+    queryRelativeTrackPosition(currentTrackPosition, relativity) {
+        const currentPlaylist = this.playlists[currentTrackPosition.playlistIndex];
 
         const upcomingTrackPosition = {
             playlistIndex: -1,
@@ -215,24 +253,24 @@ export class MusicSourceController {
         };
 
         if (relativity === "next") {
-            if (currentTrackIndex === currentPlaylist.tracks.length - 1) {
+            if (currentTrackPosition.trackIndex === currentPlaylist.tracks.length - 1) {
                 //CASE: Now playing is the final track;
-                upcomingTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                upcomingTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(currentTrackPosition.playlistIndex, relativity);
                 upcomingTrackPosition.trackIndex = 0;
             } else {
                 //CASE: Now playing is not the final track
-                upcomingTrackPosition.playlistIndex = currentPlaylistIndex;
-                upcomingTrackPosition.trackIndex = currentTrackIndex + 1;
+                upcomingTrackPosition.playlistIndex = currentTrackPosition.playlistIndex;
+                upcomingTrackPosition.trackIndex = currentTrackPosition.trackIndex + 1;
             }
         } else if (relativity === "previous") {
-            if (currentTrackIndex === 0) {
+            if (currentTrackPosition.trackIndex === 0) {
                 //CASE: Now playing is the first track
-                upcomingTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(relativity);
+                upcomingTrackPosition.playlistIndex = this.queryRelativePlaylistPosition(currentTrackPosition.playlistIndex, relativity);
                 upcomingTrackPosition.trackIndex = this.playlists[upcomingTrackPosition.playlistIndex].tracks.length - 1;
             } else {
                 //CASE: Now playing is not the first track
-                upcomingTrackPosition.playlistIndex = currentPlaylistIndex;
-                upcomingTrackPosition.trackIndex = currentTrackIndex - 1;
+                upcomingTrackPosition.playlistIndex = currentTrackPosition.playlistIndex;
+                upcomingTrackPosition.trackIndex = currentTrackPosition.trackIndex - 1;
             }
         }
 

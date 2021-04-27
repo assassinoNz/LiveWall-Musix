@@ -36,7 +36,7 @@ export class PlaylistExplorerController {
             event.preventDefault();
             PanelController.show("#playlistContextPanel", {
                 playlistName: playlist.name,
-                playlistIndex: playlistIndex
+                playlistIndex: Array.from(playlistView.parentElement.children).indexOf(playlistView)
             });
         });
 
@@ -92,8 +92,8 @@ export class PlaylistExplorerController {
             PanelController.show("#trackContextPanel", {
                 playlistName: PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name,
                 trackTitle: track.title ? track.title : track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf(".")),
-                playlistIndex: trackPosition.playlistIndex,
-                trackIndex: trackPosition.trackIndex
+                playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
+                trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
             });
         });
 
@@ -122,7 +122,6 @@ export class PlaylistExplorerController {
         //NOTE: Track's index matches its trackView index inside playlistView
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
         playlistView.children[1].children[trackPosition.trackIndex].remove();
-
     }
 
     static moveTrackView(trackPosition, toTrackPosition) {

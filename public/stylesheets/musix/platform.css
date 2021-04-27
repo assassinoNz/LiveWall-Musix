@@ -85,31 +85,26 @@ body {
     color: var(--themeColor);
 }
 
-.buttonText {
+.button.text {
+    display: block;
+
     margin: 0 0 20px 0;
-    width: 100%;
-}
-
-.buttonText.active > span {
-    border: 5px solid var(--negativeColor);
-}
-
-.buttonText > span {
-    display: inline-block;
     padding: 10px;
-    
-    color: black;
+
+    text-align: left;
     font-weight: bold;
-    font-size: 150%;
-    
+    font-size: 130%;
+
+    border: none;
+    outline: none;
     background-color: var(--themeColor);
 }
 
-.buttonText > span.close {
+.button.text.close {
     background-color: var(--secondaryColor);
 }
 
-.buttonGlyph {
+.button.glyph {
     height: 60px;
     width: 60px;
     
@@ -123,11 +118,11 @@ body {
     transform-origin: center center;
 }
 
-.buttonGlyph.active {
+.button.glyph.active {
     box-shadow: 0 0 10px var(--themeColor), inset 0 0 10px var(--negativeColor);
 }
 
-.buttonGlyph > img {
+.button.glyph > img {
     pointer-events: none;
     width: 100%;
     height: 100%;

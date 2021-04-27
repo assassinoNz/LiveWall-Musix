@@ -93,14 +93,6 @@
                     this.playbackController.seekTo(details.seekTime);
                 });
 
-                // const overlayContainer = document.getElementById("overlayContainer");
-                // overlayContainer.firstElementChild.children[1].addEventListener("click", () => {
-                //     this.init(false);
-                // });
-                // overlayContainer.firstElementChild.children[2].addEventListener("click", () => {
-                //     this.init(true);
-                // });
-
                 this.retrieveControls[0].addEventListener("click", (event) => {
                     this.playbackController.skipTrack("previous");
                 });
@@ -111,11 +103,11 @@
                     this.playbackController.skipTrack("next");
                 });
                 this.retrieveControls[3].addEventListener("click", () => {
-                    Utility.toggleButtonGlyph(this.retrieveControls[3]);
+                    Utility.togglebuttonGlyph(this.retrieveControls[3]);
                 });
                 this.retrieveControls[3].children[1].addEventListener("keypress", (event) => {
                     if (event.key === 'Enter') {
-                        Utility.toggleButtonGlyph(this.retrieveControls[3]);
+                        Utility.togglebuttonGlyph(this.retrieveControls[3]);
                         if (event.currentTarget.value !== "") {
                             PlaylistExplorerController.search(event.currentTarget.value);
                         }
@@ -133,7 +125,6 @@
                 PanelController.hide();
                 NowPlayingController.init(this, document.getElementById("nowPlayingViewport"));
                 NavigationController.init(this, document.getElementById("viewportContainer"));
-                
 
                 this.musicSourceController.setOffline(offline).then(() => {
                     //Initialize dependent static controllers
@@ -175,12 +166,12 @@
             <div id="sliderContainer">
                 <div id="controlsContainer">
                     <div style="transform: rotate(30deg);">
-                        <button class="buttonGlyph">
+                        <button class="button glyph">
                             <img src="/musix/images/musix/glyph_offline.png" style="transform: rotate(-30deg);" alt="">
                         </button>
                     </div>
                     <div style="transform: rotate(50deg);">
-                        <button class="buttonGlyph">
+                        <button class="button glyph">
                             <img src="/musix/images/musix/glyph_remotePlay.png" style="transform: rotate(-50deg);"
                                 alt="">
                         </button>
@@ -210,7 +201,7 @@
 
         </div>
 
-        <button class="buttonGlyph" id="navigationControl">
+        <button class="button glyph" id="navigationControl">
             <img src="/musix/images/musix/glyph_play.png" alt="">
         </button>
     </div>
@@ -221,10 +212,10 @@
             <div class="titleContainer">
                 <h1>Playlist Name</h1>
             </div>
-            <div class="buttonText"><span>Download playlist</span></div>
-            <div class="buttonText"><span>Remove playlist from playlists</span></div>
-            <div class="buttonText"><span>Continue playlist</span></div>
-            <div class="buttonText"><span class="close">Close this</span></div>
+            <button class="button text">Download playlist</button>
+            <button class="button text">Remove playlist from playlists</button>
+            <button class="button text">Continue playlist</button>
+            <button class="button text close">Close this</button>
         </div>
 
         <div id="trackContextPanel" class="panel popOut" data-playlist-index="0" data-track-index="0">
@@ -232,13 +223,13 @@
                 <h1>Playlist Name</h1>
                 <h1 style="color: var(--secondaryColor)">Song Name</h1>
             </div>
-            <div class="buttonText"><span>Download track</span></div>
-            <div class="buttonText"><span>Remove track from playlist</span></div>
-            <div class="buttonText"><span>Add to QuickPlaylist&trade;</span></div>
-            <div class="buttonText"><span class="close">Get rid of this</span></div>
+            <button class="button text">Download track</button>
+            <button class="button text">Remove track from playlist</button>
+            <button class="button text">Add to Quick ColorBands</button>
+            <button class="button text close">Get rid of this</button>
         </div>
 
-        <div id="searchPanel" class="panel popOut" data-keyword="null">
+        <div id="searchPanel" class="panel popOut">
             <div class="titleContainer">
                 <h1>Gimme a hint...</h1>
             </div>
@@ -248,23 +239,23 @@
             <div style="height: 50vh; margin-bottom: 20px; overflow: auto;">
 
             </div>
-            <div class="buttonText"><span class="close">Don't have any</span></div>
+            <button class="button text close">Don't have any</button>
         </div>
 
         <div id="playlistSubmitPanel" class="panel popOut">
             <div class="titleContainer">
                 <h1 style="color: var(--secondaryColor)">Shall I save the changes?</h1>
             </div>
-            <div class="buttonText"><span>Yep, do it</span></div>
-            <div class="buttonText"><span class="close">Whoa! let's rethink</span></div>
+            <button class="button text">Yep, do it</button>
+            <button class="button text close">Whoa! let's rethink</button>
         </div>
 
         <div id="sourceSelectionPanel" class="panel popIn">
             <div class="titleContainer">
-                <h1 style="color: var(--secondaryColor)">Yo, What's the source?</h1>
+                <h1 style="color: var(--secondaryColor)">Yo, what's the source gonna be?</h1>
             </div>
-            <div class="buttonText"><span onclick="window.cardInterface.init(false);">Use server's source</span></div>
-            <div class="buttonText"><span onclick="window.cardInterface.init(true);">Let me browse the source</span></div>
+            <button class="button text" onclick="window.cardInterface.init(false);">Use server's source</button>
+            <button class="button text" onclick="window.cardInterface.init(true);">Let me browse the source</button>
         </div>
     </div>
 </body>
@@ -275,16 +266,16 @@
 
     </div>
     <div id="retrieveControlsContainer">
-        <button class="buttonGlyph" title="Previous track">
+        <button class="button glyph" title="Previous track">
             <img src="/musix/images/musix/glyph_skipPrevious.png" />
         </button>
-        <button class="buttonGlyph" title="Toggle play">
+        <button class="button glyph" title="Toggle play">
             <img src="/musix/images/musix/glyph_play.png" />
         </button>
-        <button class="buttonGlyph" title="Next track">
+        <button class="button glyph" title="Next track">
             <img src="/musix/images/musix/glyph_skipNext.png" />
         </button>
-        <button class="buttonGlyph" title="Search for track">
+        <button class="button glyph" title="Search for track">
             <img src="/musix/images/musix/glyph_search.png" />
             <input type="text" placeholder="TYPE A KEYWORD"
                 style="display:none; height: 100%; width: 100%; text-align: center; background-color: transparent; border: none;"
@@ -292,7 +283,7 @@
         </button>
     </div>
     <div id="updateControlsContainer">
-        <button class="buttonGlyph" title="Toggle RemotePlay">
+        <button class="button glyph" title="Toggle RemotePlay">
             <img src="/musix/images/musix/glyph_remotePlay.png" />
         </button>
     </div>
@@ -311,7 +302,7 @@
         </div>
     </div>
 
-    <div class="buttonText" draggable="true"><span>Track Name</span></div>
+    <button class="button text" draggable="true"></button>
 </template>
 
 </html>

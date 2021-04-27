@@ -8,9 +8,6 @@ export class PlaybackController {
     //NOTE: RemotePlay mirrors all the activity of the master device in all the slave devices
     remotePlay = false;
 
-    //NOTE: RemoteOnly turns the master device into a mere remote controller. No activity will be executed on the master device.
-    remoteOnly = false;
-
     boundedHandlers = {
         startSeek: this.startSeek.bind(this),
         handleTimeUpdate: this.handleTimeUpdate.bind(this)
@@ -113,17 +110,6 @@ export class PlaybackController {
         }
     }
 
-    setRemoteOnly(remoteOnly) {
-        this.remoteOnly = remoteOnly;
-
-        //NOTE: RemotePlay must be enabled along with RemoteOnly
-        if (remoteOnly) {
-            this.setRemotePlay(true);
-        }
-
-        NowPlayingController.updateViewSection("remoteOnly", remoteOnly);
-    }
-
     toggleRemoteOnly() {
         if (this.remoteOnly) {
             //CASE: RemoteOnly is enabled
@@ -134,6 +120,26 @@ export class PlaybackController {
         }
     }
 
+    seekTo(time) {
+        this.mediaController.currentTime = time;
+
+        //Update UI
+        // NowPlayingController.updateViewSection("position", [this.mediaController.duration, this.mediaController.playbackRate, this.mediaController.currentTime]);
+    }
+
+    setPlayback(playback) {
+        //NOTE: Vibration is needed only when there is a playback state change
+        if (playback && this.mediaController.paused) {
+            this.mediaController.play();
+            navigator.vibrate(100);
+        } else if (!playback && !this.mediaController.paused) {
+            this.mediaController.pause();
+            navigator.vibrate(100);
+        }
+    }
+
+    //BROADCASTABLE METHODS
+    //WARNING: The volume will be changed in the master device regardless of the remotePlay mode
     setVolume(volume) {
         if (this.remotePlay) {
             //CASE: RemotePlay is enabled
@@ -143,7 +149,6 @@ export class PlaybackController {
             });
         }
 
-        //NOTE: Volume is the only setting that is updated regardless of remoteOnly
         this.mediaController.volume = volume;
 
         //Update playback state
@@ -153,41 +158,7 @@ export class PlaybackController {
         NowPlayingController.updateViewSection("volume", [1, volume]);
     }
 
-    setPlayback(playback) {
-        if (this.remotePlay) {
-            //CASE: Only RemotePlay is enabled
-            //Since we want to mirror our playback state to client, manually set the playback state
-            //NOTE: If the client is already on the playback state it will be ignored
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-set-playback",
-                playback: playback
-            });
-        }
-
-        //NOTE: Setting playback locally must be ignored when RemoteOnly is enabled
-        if (!this.remoteOnly) {
-            //CASE: RemoteOnly is disabled
-            //NOTE: Vibration is needed only when there is a playback state change
-            if (playback && this.mediaController.paused) {
-                this.mediaController.play();
-                navigator.vibrate(100);
-            } else if (!playback && !this.mediaController.paused) {
-                this.mediaController.pause();
-                navigator.vibrate(100);
-            }
-        }
-    }
-
     loadTrack(trackPosition, autoplay) {
-        //NOTE: Only set the new playlist when it has a different index
-        if (parseInt(localStorage.getItem("currentPlaylistIndex")) !== trackPosition.playlistIndex) {
-            //Update playback state
-            localStorage.setItem("currentPlaylistIndex", trackPosition.playlistIndex.toString());
-
-            //Update UI
-            NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
-        }
-
         if (this.remotePlay) {
             //CASE: RemotePlay is enabled
             this.cardInterface.getWebSocket().emit("broadcast-event", {
@@ -195,79 +166,65 @@ export class PlaybackController {
                 trackPosition: trackPosition,
                 autoplay: autoplay
             });
-        }
+        } else {
+            //CASE: RemotePlay is disabled
+            //NOTE: Only set the playlist styling when the playlist differs from the current playlist
+            if (parseInt(localStorage.getItem("currentPlaylistIndex")) !== trackPosition.playlistIndex) {
+                //Update playback state
+                localStorage.setItem("currentPlaylistIndex", trackPosition.playlistIndex.toString());
 
-        //NOTE: Loading tracks locally must be ignored when RemoteOnly is enabled
-        if (!this.remoteOnly) {
-            //CASE: RemoteOnly is disabled
+                //Update UI
+                NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
+            }
+
             const track = this.cardInterface.getController("musicSource").getTrackAt(trackPosition);
-
+    
             //Update mediaController
             this.cardInterface.getController("musicSource").determineTrackUrl(trackPosition).then((trackUrl) => {
                 this.mediaController.src = trackUrl;
                 this.mediaController.currentTime = 0;
-
+    
                 if (autoplay) {
                     this.mediaController.play();
                 }
             });
-
+    
             //Calculate media metadata
             const mediaMetadata = {
                 title: track.title,
                 artist: track.artist,
                 album: this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name
             };
-
+    
             if (track.artist) {
                 mediaMetadata.artist = track.artist;
             } else {
                 mediaMetadata.artist = "Unknown Artist";
             }
-
+    
             if (track.title) {
                 mediaMetadata.title = track.title;
             } else {
                 mediaMetadata.title = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."));
             }
-
+    
             //Update playback state
             localStorage.setItem("currentTrackIndex", trackPosition.trackIndex.toString());
             localStorage.setItem(this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name, trackPosition.trackIndex.toString());
-
+    
             //Update UI
             NowPlayingController.updateViewSection("track", mediaMetadata);
             // NowPlayingController.updateViewSection("position", [this.mediaController.duration, this.mediaController.playbackRate, this.mediaController.currentTime]);
         }
     }
 
-    seekTo(time) {
-        if (this.remotePlay) {
-            this.cardInterface.getWebSocket().emit("broadcast-event", {
-                eventName: "remote-seek-to",
-                time: time
-            });
-        }
-
-        //NOTE: Seeking tracks locally must be ignored when RemoteOnly is enabled
-        if (!this.remoteOnly) {
-            this.mediaController.currentTime = time;
-
-            //Update UI
-            // NowPlayingController.updateViewSection("position", [this.mediaController.duration, this.mediaController.playbackRate, this.mediaController.currentTime]);
-        }
-    }
-
     togglePlay() {
         if (this.remotePlay) {
-            //Since we don't know the remote client's playback state, let the remote client toggle it
+            //CASE: RemotePlay is enabled
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-toggle-play"
             });
-        }
-
-        //NOTE: Toggling playback state locally must be ignored when RemoteOnly is enabled
-        if (!this.remoteOnly) {
+        } else {
             if (this.mediaController.paused) {
                 this.setPlayback(true);
             } else {
@@ -278,19 +235,16 @@ export class PlaybackController {
 
     skipTrack(direction) {
         if (this.remotePlay) {
-            //Since we don't know the remote client's current track, let the remote client skip it
+            //CASE: RemotePlay is enabled
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-skip-track",
                 direction: direction
             });
-        }
-
-        //NOTE: Skipping tracks locally must be ignored when RemoteOnly is enabled
-        if (!this.remoteOnly) {
+        } else {
             const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
-
-            this.loadTrack(upcomingTrackPosition, true);
-
+    
+            this.loadTrack(upcomingTrackPosition, false);
+    
             navigator.vibrate(100);
         }
     }

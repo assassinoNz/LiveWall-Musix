@@ -55,25 +55,17 @@ export class MusicSourceController {
                 window.socket.on("remote-set-volume", (params) => {
                     this.cardInterface.getController("playback").setVolume(params.volume);
                 });
-
+            
                 window.socket.on("remote-load-track", (params) => {
                     this.cardInterface.getController("playback").loadTrack(params.trackPosition, params.autoplay);
                 });
-
-                window.socket.on("remote-skip-track", (params) => {
-                    this.cardInterface.getController("playback").skipTrack(params.direction);
-                });
-
-                window.socket.on("remote-seek-to", (params) => {
-                    this.cardInterface.getController("playback").seekTo(params.time);
-                });
-
-                window.socket.on("remote-set-playback", (params) => {
-                    this.cardInterface.getController("playback").setPlayback(params.playback);
-                });
-
+            
                 window.socket.on("remote-toggle-play", (params) => {
                     this.cardInterface.getController("playback").togglePlay();
+                });
+            
+                window.socket.on("remote-skip-track", (params) => {
+                    this.cardInterface.getController("playback").skipTrack(params.direction);
                 });
             }
 
@@ -263,13 +255,13 @@ export class MusicSourceController {
             //Ask to begin playback of quickPlaylist
             if (window.frameElement) {
                 window.parent.shellInterface.throwAlert("Got a question", "Do you want to start QuickPlaylist now?", "Tap YES if you want to start playback of the QuickPlaylist immediately. Otherwise tap on NO", null, "YES", "NO").then(() => {
-                    this.cardInterface.getController("playback").loadTrack({playlistIndex: quickPlaylistIndex, trackIndex: 0}, true);
+                    this.cardInterface.getController("playback").loadTrack({ playlistIndex: quickPlaylistIndex, trackIndex: 0 }, true);
                 }, () => {
                     //Do nothing here
                 });
             } else {
                 if (confirm("Do you want to start playback of QuickPlaylist now?")) {
-                    this.cardInterface.getController("playback").loadTrack({playlistIndex: quickPlaylistIndex, trackIndex: 0}, true);
+                    this.cardInterface.getController("playback").loadTrack({ playlistIndex: quickPlaylistIndex, trackIndex: 0 }, true);
                 };
             }
         } else {

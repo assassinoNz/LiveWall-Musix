@@ -15,7 +15,7 @@ export class PlaylistExplorerController {
 
         PlaylistExplorerController.view = viewport;
         PlaylistExplorerController.playlistViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".playlistView");
-        PlaylistExplorerController.trackViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".buttonText");
+        PlaylistExplorerController.trackViewTemplate = PlaylistExplorerController.cardInterface.getTemplate(".button.text");
 
         //Load playlistExplorer
         const playlistViewsFragment = new DocumentFragment();
@@ -51,12 +51,12 @@ export class PlaylistExplorerController {
     static createTrackView(trackPosition) {
         const track = PlaylistExplorerController.cardInterface.getController("musicSource").getTrackAt(trackPosition);
         const trackView = PlaylistExplorerController.trackViewTemplate.cloneNode(true);
-        trackView.firstElementChild.style.backgroundColor = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).themeColor;
+        trackView.style.backgroundColor = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).themeColor;
 
         if (track.title) {
-            trackView.firstElementChild.textContent = track.title;
+            trackView.textContent = track.title;
         } else {
-            trackView.firstElementChild.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
+            trackView.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
         }
 
         trackView.addEventListener("dragover", (event) => {
@@ -79,14 +79,14 @@ export class PlaylistExplorerController {
             };
         });
 
-        trackView.firstElementChild.addEventListener("click", (event) => {
+        trackView.addEventListener("click", (event) => {
             //NOTE: A trackView's position corresponds to its track position
             //Get the trackView's position within the playlistExplorer
             const playlistIndex = Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement);
             const trackIndex = Array.from(trackView.parentElement.children).indexOf(trackView);
-            PlaylistExplorerController.cardInterface.getController("playback").loadTrack({playlistIndex: playlistIndex, trackIndex: trackIndex}, true);
+            PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: playlistIndex, trackIndex: trackIndex }, true);
         });
-        trackView.firstElementChild.addEventListener("contextmenu", (event) => {
+        trackView.addEventListener("contextmenu", (event) => {
             event.preventDefault();
 
             PanelController.show("#trackContextPanel", {
@@ -116,13 +116,13 @@ export class PlaylistExplorerController {
         //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
         PlaylistExplorerController.view.children[playlistIndex].remove();
     }
-    
+
     static removeTrackView(trackPosition) {
         //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
         //NOTE: Track's index matches its trackView index inside playlistView
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
         playlistView.children[1].children[trackPosition.trackIndex].remove();
-        
+
     }
 
     static moveTrackView(trackPosition, toTrackPosition) {
@@ -143,18 +143,12 @@ export class PlaylistExplorerController {
         for (let i = 0; i < playlists.length; i++) {
             for (let j = 0; j < playlists[i].tracks.length; j++) {
                 if (playlists[i].tracks[j].title.toLowerCase().includes(keyword) || playlists[i].tracks[j].artist.toLowerCase().includes(keyword)) {
-                    const trackView = PlaylistExplorerController.trackViewTemplate.cloneNode(true);
-                    trackView.firstElementChild.style.backgroundColor = playlists[i].themeColor;
+                    //Create a trackView and clone it to drop all the event handlers
+                    const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: i, trackIndex: j }).cloneNode(true);
+                    trackView.draggable = "false";
 
-                    if (playlists[i].tracks[j].title) {
-                        trackView.firstElementChild.textContent = playlists[i].tracks[j].title;
-                    } else {
-                        const track = playlists[i].tracks[j];
-                        trackView.firstElementChild.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
-                    }
-
-                    trackView.firstElementChild.addEventListener("click", (event) => {
-                        PlaylistExplorerController.cardInterface.getController("playback").loadTrack({playlistIndex: i, trackIndex: j}, true);
+                    trackView.addEventListener("click", (event) => {
+                        PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: i, trackIndex: j }, true);
                     });
 
                     trackViewFragment.appendChild(trackView);

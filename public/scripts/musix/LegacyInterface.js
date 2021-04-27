@@ -9,7 +9,7 @@ function main() {
 
     var xhr = new XMLHttpRequest();
     xhr.addEventListener("load", function () {
-        playlists = JSON.parse(this.responseText);
+        playlists = JSON.parse(this.responseText).data;
     });
     xhr.open("GET", "/musix/playlists");
     xhr.send();
@@ -27,12 +27,12 @@ function main() {
         loadTrack(params.trackPosition, params.autoplay);
     });
 
-    window.socket.on("remote-seek-to", function (params) {
-        seekTo(params.time);
+    window.socket.on("remote-toggle-play", function () {
+        togglePlay();
     });
 
-    window.socket.on("remote-set-playback", function (params) {
-        setPlayback(params.playback);
+    window.socket.on("remote-skip-track", function (params) {
+        skipTrack(params.direction);
     });
 }
 
@@ -55,12 +55,8 @@ function loadTrack(trackPosition, autoplay) {
     currentTrackIndex = trackPosition.trackIndex;
 }
 
-function seekTo(time) {
-    mediaController.currentTime = time;
-}
-
-function setPlayback(playback) {
-    if (playback) {
+function togglePlay() {
+    if (mediaController.paused) {
         mediaController.play();
     } else {
         mediaController.pause();
@@ -68,9 +64,9 @@ function setPlayback(playback) {
 }
 
 function skipTrack(direction) {
-    const upcomingTrackPosition = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(direction);
+    const upcomingTrackPosition = queryRelativeTrackPosition(direction);
 
-    this.loadTrack(upcomingTrackPosition, true);
+    loadTrack(upcomingTrackPosition, true);
 }
 
 function queryRelativePlaylistPosition(relativity) {

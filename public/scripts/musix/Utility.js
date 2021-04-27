@@ -7,8 +7,8 @@ export class Utility {
         const thetaString = slider.style.transform;
         const theta = thetaString.slice(7, thetaString.length - 4);
         //Calculate currentSeekedValue according to theta
-        const unit = rangeUpperLimit / (endTheta-startTheta);
-        const currentSeekedValue = (theta-startTheta) * unit;
+        const unit = rangeUpperLimit / (endTheta - startTheta);
+        const currentSeekedValue = (theta - startTheta) * unit;
         //Output currentSeekedValue
         return currentSeekedValue;
     }
@@ -21,7 +21,7 @@ export class Utility {
         //Calculate theta using currentTime
         const theta = value / unit;
         //Rotate seekSlider theta degrees
-        slider.style.transform = `rotate(${startTheta+theta}deg)`;
+        slider.style.transform = `rotate(${startTheta + theta}deg)`;
     }
 
     static findFirstNonNullIndex(array, lowerIndex, upperIndex) {
@@ -52,7 +52,7 @@ export class Utility {
         let resultingSeconds = Math.round(60 * (minutesAsFraction - wholeMinutes));
         //Format integers for leading zeros
         if (wholeMinutes < 10) { timeParts[0] = "0" + wholeMinutes; } else { timeParts[0] = wholeMinutes.toString(); }
-        if (resultingSeconds < 10) { timeParts[1] = "0" + resultingSeconds; }  else { timeParts[1] = resultingSeconds.toString(); }
+        if (resultingSeconds < 10) { timeParts[1] = "0" + resultingSeconds; } else { timeParts[1] = resultingSeconds.toString(); }
         //Output formatted time
         return timeParts;
     }

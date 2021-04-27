@@ -94,28 +94,19 @@ export class NowPlayingController {
                 break;
             }
 
-            case "remoteOnly": {
-                if (value === true) {
-                    this.volumeSlider.style.backgroundColor = "var(--themeColor)";
-                } else {
-                    this.volumeSlider.style.backgroundColor = "var(--tertiaryColor)";
-                }
-                break;
-            }
-
             case "playlist": {
                 const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(value);
                 NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = playlist.name;
                 document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", playlist.themeColor);
-                
+
                 //Update media session
                 navigator.mediaSession.metadata.artwork = [
                     { src: "images/musix/launcher_192.png", sizes: "192x192", type: "image/png" }
                 ];
-                
+
                 break;
             }
-            
+
             case "track": {
                 NowPlayingController.view.querySelector("#artistDisplay").textContent = value.artist;
                 NowPlayingController.view.querySelector("#titleDisplay").textContent = value.title;
@@ -131,15 +122,15 @@ export class NowPlayingController {
             }
 
             // case "position": {
-                //Update media session
-                // navigator.mediaSession.metadata.setPositionState({
-                //     duration: value[0],
-                //     playbackRate: value[1],
-                //     position: value[2],
-                // });
+            //Update media session
+            // navigator.mediaSession.metadata.setPositionState({
+            //     duration: value[0],
+            //     playbackRate: value[1],
+            //     position: value[2],
+            // });
             //     break;
             // }
-            
+
             case "time": {
                 Utility.setCircularSliderView(NowPlayingController.seekSlider, value[0], value[1]);
                 NowPlayingController.playTimeDisplays[0].textContent = value[2];
@@ -218,5 +209,5 @@ export class NowPlayingController {
         }
     }
 
-    
+
 }

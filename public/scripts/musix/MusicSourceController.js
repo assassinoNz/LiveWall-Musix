@@ -141,14 +141,14 @@ export class MusicSourceController {
     }
 
     removePlaylistAt(playlistIndex) {
-        this.playlists.slice(playlistIndex, 1);
+        this.playlists.splice(playlistIndex, 1);
 
         //Update UI
         PlaylistExplorerController.removePlaylistView(playlistIndex);
     }
 
     removeTrackAt(trackPosition) {
-        this.playlists[trackPosition.playlistIndex].tracks.slice(trackPosition.trackIndex, 1);
+        this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 1);
 
         //Update UI
         PlaylistExplorerController.removeTrackView(trackPosition);

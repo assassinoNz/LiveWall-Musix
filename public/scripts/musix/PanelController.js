@@ -27,20 +27,20 @@ export class PanelController {
             PanelController.hide();
         });
         //Add onclick to continuePlaylistButton for continuing the playlist
-        // PanelController.view.children[0].children[3].firstElementChild.addEventListener("click", () => {
-        //     const playlistIndex = parseInt(PanelController.view.children[0].dataset.playlistIndex);
-        //     PlaylistExplorerController.cardInterface.getController("playback").setPlaylist(PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylistAt(playlistIndex));
-        //     if (localStorage.getItem(playlistIndex.toString())) {
-        //         //CASE: The playlist has been played before
-        //         //Continue playlist
-        //         PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(parseInt(localStorage.getItem(playlistIndex.toString())), true);
-        //     } else {
-        //         //CASE: The playlist hasn't been played before
-        //         //PLay from beginning
-        //         PlaylistExplorerController.cardInterface.getController("playback").loadTrackAt(0, true);
-        //     }
-        //     PanelController.hide();
-        // });
+        PanelController.view.children[0].children[3].addEventListener("click", () => {
+            const playlistIndex = parseInt(PanelController.view.children[0].dataset.playlistIndex);
+            const playlistName = PanelController.cardInterface.getController("musicSource").getPlaylistAt(playlistIndex).name;
+            if (localStorage.getItem(playlistName)) {
+                //CASE: The playlist has been played before
+                //Continue playlist
+                PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: playlistIndex, trackIndex: parseInt(localStorage.getItem(playlistName)) }, true);
+            } else {
+                //CASE: The playlist hasn't been played before
+                //Play from beginning
+                PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: playlistIndex, trackIndex: 0 }, true);
+            }
+            PanelController.hide();
+        });
 
         //Add onclick to downloadTrackButton for downloading the track
         PanelController.view.children[1].children[1].addEventListener("click", () => {
@@ -64,15 +64,15 @@ export class PanelController {
             PanelController.hide();
         });
 
-        //Add onclick to submitButton for submitting the playlist
+        //Add onkeypress to searchInput for displaying search results
         PanelController.view.children[2].children[1].addEventListener("keypress", (event) => {
             if (event.key === "Enter") {
                 event.target.blur();
                 PlaylistExplorerController.search(event.target.value);
             }
         });
-
-        //Add onkeyup to searchInput for displaying search results
+        
+        //Add onclick to submitButton for submitting the playlist
         PanelController.view.children[3].children[1].addEventListener("click", (event) => {
             PanelController.cardInterface.getController("musicSource").exportPlaylists().then(() => {
                 PanelController.hide();

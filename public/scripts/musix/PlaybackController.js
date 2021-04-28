@@ -8,9 +8,15 @@ export class PlaybackController {
     //NOTE: RemotePlay mirrors all the activity of the master device in all the slave devices
     remotePlay = false;
     relativeTrackPositions = {
-        previous: {},
-        current: {},
-        next: {}
+        previous: {
+            playlistIndex: -1, trackIndex: -1
+        },
+        current: {
+            playlistIndex: -1, trackIndex: -1
+        },
+        next: {
+            playlistIndex: -1, trackIndex: -1
+        }
     };
 
     boundedHandlers = {
@@ -31,9 +37,6 @@ export class PlaybackController {
             //Playback state parameters must be initialized
             localStorage.setItem("hasPlaybackState", "true");
             localStorage.setItem("currentVolume", "1");
-
-            //NOTE: quickPlaylistIndex must always be -1 in the beginning
-            localStorage.setItem("quickPlaylistIndex", "-1");
         }
 
         //Add eventListeners to the mediaController and seekSlider
@@ -174,19 +177,16 @@ export class PlaybackController {
                 autoplay: autoplay
             });
         } else {
+            //NOTE: Only set the playlist styling when the playlist differs from the current playlist
+            if (this.relativeTrackPositions.current.playlistIndex !== trackPosition.playlistIndex) {
+                //Update UI
+                NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
+            }
+
             //CASE: RemotePlay is disabled
             this.relativeTrackPositions.previous = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(trackPosition, "previous");
             this.relativeTrackPositions.current = trackPosition;
             this.relativeTrackPositions.next = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(trackPosition, "next");
-
-            //NOTE: Only set the playlist styling when the playlist differs from the current playlist
-            if (parseInt(localStorage.getItem("currentPlaylistIndex")) !== trackPosition.playlistIndex) {
-                //Update playback state
-                localStorage.setItem("currentPlaylistIndex", trackPosition.playlistIndex.toString());
-                
-                //Update UI
-                NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
-            }
             
             const track = this.cardInterface.getController("musicSource").getTrackAt(trackPosition);
             
@@ -217,7 +217,6 @@ export class PlaybackController {
             }
     
             //Update playback state
-            localStorage.setItem("currentTrackIndex", trackPosition.trackIndex.toString());
             localStorage.setItem(this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name, trackPosition.trackIndex.toString());
     
             //Update UI
@@ -268,7 +267,7 @@ export class PlaybackController {
         }, () => {
             //Update the seeked time
             const seekedTime = Utility.formatTime(Utility.getCircularSliderValue(NowPlayingController.seekSlider, this.mediaController.duration));
-            NowPlayingController.updateViewSection("time", seekedTime);
+            NowPlayingController.updateViewSection("time", [this.mediaController.duration, seekedTime, ...Utility.formatTime(this.mediaController.currentTime)]);
         }, () => {
             const seekedTime = Utility.getCircularSliderValue(NowPlayingController.seekSlider, this.mediaController.duration);
             this.seekTo(seekedTime);

@@ -21,10 +21,6 @@ export class NowPlayingController {
         NowPlayingController.playTimeDisplays = NowPlayingController.view.querySelectorAll(".playTimeDisplay");
         NowPlayingController.controls = NowPlayingController.view.querySelectorAll("#controlsContainer>div>button");
 
-        //Add onclick to volumeSlider for toggling remote only mode
-        NowPlayingController.volumeSlider.addEventListener("contextmenu", (event) => {
-            NowPlayingController.cardInterface.getController("playback").toggleRemoteOnly();
-        });
         //Add onpointerdown to volumeSlider for changing volume
         //NOTE: Changing volume is done in realtime except in RemotePlay
         NowPlayingController.volumeSlider.addEventListener("pointerdown", (event) => {
@@ -95,6 +91,7 @@ export class NowPlayingController {
             }
 
             case "playlist": {
+                //NOTE: Only set the playlist styling when the playlist differs from the current playlist
                 const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(value);
                 NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = playlist.name;
                 document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", playlist.themeColor);

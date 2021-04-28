@@ -76,13 +76,15 @@ export class PlaylistExplorerController {
         });
         trackView.addEventListener("drop", (event) => {
             trackView.classList.remove("emphasize");
-            
+
+            const removedTrack = this.cardInterface.getController("musicSource").removeTrackAt(this.draggingTrackPosition, true);
+
             const droppingTrackPosition = {
                 playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
                 trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
             };
 
-            this.moveTrackView(this.draggingTrackPosition, droppingTrackPosition);
+            this.cardInterface.getController("musicSource").addTrackAt(droppingTrackPosition, removedTrack, true);
 
             this.draggingTrackPosition = null;
         });
@@ -113,19 +115,25 @@ export class PlaylistExplorerController {
         PlaylistExplorerController.view.appendChild(playlistView);
     }
 
-    static appendTrackView(trackPosition) {
-        //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
+    static addMissingTrackViewForTrackAt(trackPosition) {
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
-        const trackView = PlaylistExplorerController.createTrackView(trackPosition);
-        playlistView.children[1].appendChild(trackView);
+        const missingTrackView = PlaylistExplorerController.createTrackView(trackPosition);
+
+        if (trackPosition.trackIndex === playlistView.children[1].childElementCount) {
+            //CASE: trackPosition is a new position right after the last track
+            playlistView.children[1].appendChild(missingTrackView);
+        } else {
+            //CASE: trackPosition is an existing position
+            playlistView.children[1].insertBefore(missingTrackView, playlistView.children[1].children[trackPosition.trackIndex]);
+        }
     }
 
-    static removePlaylistView(playlistIndex) {
+    static removePlaylistViewAt(playlistIndex) {
         //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
         PlaylistExplorerController.view.children[playlistIndex].remove();
     }
 
-    static removeTrackView(trackPosition) {
+    static removeTrackViewAt(trackPosition) {
         //NOTE: Playlist's index matches its playlistView index inside playlistViewContainer
         //NOTE: Track's index matches its trackView index inside playlistView
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];

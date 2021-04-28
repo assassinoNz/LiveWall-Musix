@@ -133,82 +133,89 @@ export class MusicSourceController {
         return assignedPlaylistIndex;
     }
 
-    appendTrackToPlaylist(playlistIndex, track) {
-        const assignedTrackIndex = this.playlists[playlistIndex].tracks.push(track) - 1;
+    addTrackAt(trackPosition, track, updateUI) {
+        this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 0, track);
 
-        //Update UI
-        PlaylistExplorerController.appendTrackView({
-            playlistIndex: playlistIndex,
-            trackIndex: assignedTrackIndex
-        });
+        const currentTrackPosition = this.cardInterface.getController("playback").getCurrentTrackPosition();
+        if (trackPosition.playlistIndex === currentTrackPosition.playlistIndex && trackPosition.trackIndex <= currentTrackPosition.trackIndex) {
+            //CASE: Added track and the currentTrack was in the same playlist and added track was added to currentTrackPosition or a position before it
+            //Increase the currentTrackIndex
+            this.cardInterface.getController("playback").getCurrentTrackPosition().trackIndex += 1;
+        }
 
-        return assignedTrackIndex;
+        if (updateUI) {
+            //Update UI
+            PlaylistExplorerController.addMissingTrackViewForTrackAt(trackPosition);
+        }
     }
 
-    removePlaylistAt(playlistIndex) {
-        this.playlists.splice(playlistIndex, 1);
+    removePlaylistAt(playlistIndex, updateUI) {
+        const removedPlaylist = this.playlists.splice(playlistIndex, 1);
 
-        const relativeTrackPositions = this.cardInterface.getController("playback").getRelativeTrackPositions();
-        
-        if (playlistIndex === relativeTrackPositions.current.playlistIndex) {
+        const currentTrackPosition = this.cardInterface.getController("playback").getCurrentTrackPosition();
+        if (playlistIndex === currentTrackPosition.playlistIndex) {
+            //CASE: Removed playlist was the playlist at currentPlaylistIndex
             //Try to load the first track of the new playlist at currentPlaylistIndex
-            if (this.playlists[relativeTrackPositions.current.playlistIndex]) {
-                //CASE: There is a new playlist at the currentPlaylistIndex
-                //Load its firstTrack
-                this.cardInterface.getController("playback").loadTrack({ playlistIndex: relativeTrackPositions.current.playlistIndex, trackIndex: 0 }, false);
+            if (this.playlists[currentTrackPosition.playlistIndex]) {
+                //CASE: There is a new playlist at the currentPlaylistIndex/Removed playlist was the currentPlaylist but wasn't the last playlist
+                //Load the first track of the new playlist at the currentPlaylistIndex
+                this.cardInterface.getController("playback").loadTrack({ playlistIndex: currentTrackPosition.playlistIndex, trackIndex: 0 }, false);
             } else {
-                //CASE: There is no playlist at the currentPlaylistIndex
+                //CASE: There is no playlist at the currentPlaylistIndex/Removed playlist was the currentPlaylist and also was the last playlist
                 //Load the first track of the first playlist
                 this.cardInterface.getController("playback").loadTrack({ playlistIndex: 0, trackIndex: 0 }, false);
             }
-        } else if (playlistIndex === relativeTrackPositions.previous.playlistIndex) {
-            //CASE: Removed playlist is the relativePreviousPlaylist
-            //currentPlaylistIndex becomes the previousPlaylistIndex
-            relativeTrackPositions.current.playlistIndex = relativeTrackPositions.previous.playlistIndex;
-            //Recalculate the relativePreviousTrack
-            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "previous");
-        } else if (playlistIndex === relativeTrackPositions.next.playlistIndex) {
-            //CASE: Removed playlist is the relativeNextPlaylist
-            //Recalculate the relativeNextTrack
-            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "next");
+        } else if (playlistIndex < currentTrackPosition.playlistIndex) {
+            //CASE: Removed playlist was situated before the currentPlaylist
+            //Decrease the currentPlaylistIndex by 1
+            currentTrackPosition.playlistIndex -= 1;
         }
 
-        //Update UI
-        PlaylistExplorerController.removePlaylistView(playlistIndex);
+        if (updateUI) {
+            //Update UI
+            PlaylistExplorerController.removePlaylistViewAt(playlistIndex);
+        }
+
+        return removedPlaylist;
     }
 
-    removeTrackAt(trackPosition) {
-        this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 1);
+    removeTrackAt(trackPosition, updateUI) {
+        const removedTrack = this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 1)[0];
 
-        const relativeTrackPositions = this.cardInterface.getController("playback").getRelativeTrackPositions();
-        if (trackPosition.playlistIndex === relativeTrackPositions.previous.playlistIndex && trackPosition.trackIndex === relativeTrackPositions.previous.trackIndex) {
-            //CASE: Removed track is the relativePreviousTrack
-            //Current track becomes the previous track
-            relativeTrackPositions.current = relativeTrackPositions.previous;
-            //Recalculate the relativePreviousTrack
-            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "previous");
-        } else if (trackPosition.playlistIndex === relativeTrackPositions.current.playlistIndex && trackPosition.trackIndex === relativeTrackPositions.current.trackIndex) {
-            //CASE: Removed track is the currentTrack
-            //Load the recalculated next track of the previous track
-            this.cardInterface.getController("playback").loadTrack(this.queryRelativeTrackPosition(relativeTrackPositions.previous, "next"), false);
-        } else if (trackPosition.playlistIndex === relativeTrackPositions.next.playlistIndex && trackPosition.trackIndex === relativeTrackPositions.next.trackIndex) {
-            //CASE: Removed track is the relativeNextTrack
-            //Recalculate the relativeNextTrack
-            relativeTrackPositions.previous = this.queryRelativeTrackPosition(relativeTrackPositions.current, "next");
+        const currentTrackPosition = this.cardInterface.getController("playback").getCurrentTrackPosition();
+        if (trackPosition.playlistIndex === currentTrackPosition.playlistIndex) {
+            //CASE: Removed track and the currentTrack was in the same playlist
+            if (trackPosition.trackIndex === currentTrackPosition.trackIndex) {
+                //CASE: Removed track was the track at currentTrackIndex
+                //Try to load the new track at currentTrackPosition
+                if (this.playlists[currentTrackPosition.playlistIndex].tracks[currentTrackPosition.trackIndex]) {
+                    //CASE: There is a new track at the currentTrackPosition/Removed track was in the currentPlaylist but not its last track
+                    //Load the new track at currentTrackPosition
+                    this.cardInterface.getController("playback").loadTrack(currentTrackPosition, false);
+                } else {
+                    //CASE: There is track at the currentTrackPosition/Removed playlist was in the currentPlaylist and also was its last track
+                    //Load the first track of the next playlist
+                    //NOTE: We have to query the next playlist
+                    this.cardInterface.getController("playback").loadTrack({ playlistIndex: this.queryRelativePlaylistPosition(currentTrackPosition.playlistIndex, "next"), trackIndex: 0 }, false);
+                }
+            } else if (trackPosition.trackIndex < currentTrackPosition.trackIndex) {
+                //CASE: Removed track was situated before the track at currentTrackPosition
+                //Decrease the currentTrackIndex by 1
+                currentTrackPosition.trackIndex -= 1;
+            }
         }
 
-        //Update UI
-        PlaylistExplorerController.removeTrackView(trackPosition);
+        if (updateUI) {
+            //Update UI
+            PlaylistExplorerController.removeTrackViewAt(trackPosition);
+        }
 
         //Remove the playlist if all tracks are removed
         if (this.playlists[trackPosition.playlistIndex].tracks.length === 0) {
-            this.removePlaylistAt(trackPosition.playlistIndex);
+            this.removePlaylistAt(trackPosition.playlistIndex, true);
         }
-    }
 
-    moveTrack(trackPosition, toTrackPosition) {
-        const fromTrack = this.playlists[trackPosition.playlistIndex].tracks.splice(trackPosition.trackIndex, 1)[0];
-        this.playlists[toTrackPosition.playlistIndex].tracks.splice(toTrackPosition.trackIndex, 0, fromTrack);
+        return removedTrack;
     }
 
     async determineTrackUrl(trackPosition) {
@@ -231,7 +238,7 @@ export class MusicSourceController {
 
     queryRelativePlaylistPosition(playlistIndex, relativity) {
         if (relativity === "next") {
-            if (playlistIndex === this.playlists.length) {
+            if (playlistIndex === this.playlists.length - 1) {
                 //CASE: Current playlist is the last playlist
                 return 0;
             } else {
@@ -286,7 +293,7 @@ export class MusicSourceController {
         if (this.quickPlaylistIndex) {
             //CASE: There is a quick playlist created
             //Add the specified track as the last track of the quick playlist
-            this.appendTrackToPlaylist(this.quickPlaylistIndex, track);
+            this.addTrackAt({playlistIndex: this.quickPlaylistIndex, trackIndex: this.playlists[this.quickPlaylistIndex].tracks.length}, track, true);
         } else {
             //CASE: There is no quick playlist created
             //Create the quick playlist in the playlists[]

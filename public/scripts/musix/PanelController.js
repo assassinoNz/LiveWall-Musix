@@ -23,7 +23,7 @@ export class PanelController {
         });
         //Add onclick to removePlaylistButton for removing the playlist
         PanelController.view.children[0].children[2].addEventListener("click", () => {
-            PanelController.cardInterface.getController("musicSource").removePlaylistAt(parseInt(PanelController.view.children[0].dataset.playlistIndex));
+            PanelController.cardInterface.getController("musicSource").removePlaylistAt(parseInt(PanelController.view.children[0].dataset.playlistIndex), true);
             PanelController.hide();
         });
         //Add onclick to continuePlaylistButton for continuing the playlist
@@ -52,7 +52,7 @@ export class PanelController {
             PanelController.cardInterface.getController("musicSource").removeTrackAt({
                 playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
                 trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex)
-            });
+            }, true);
             PanelController.hide();
         });
         //Add onclick to addToQuickPlaylistButton for adding the track to quickPlaylist

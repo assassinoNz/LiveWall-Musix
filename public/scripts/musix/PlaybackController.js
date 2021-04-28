@@ -7,16 +7,8 @@ export class PlaybackController {
 
     //NOTE: RemotePlay mirrors all the activity of the master device in all the slave devices
     remotePlay = false;
-    relativeTrackPositions = {
-        previous: {
-            playlistIndex: -1, trackIndex: -1
-        },
-        current: {
-            playlistIndex: -1, trackIndex: -1
-        },
-        next: {
-            playlistIndex: -1, trackIndex: -1
-        }
+    currentTrackPosition = {
+        playlistIndex: -1, trackIndex: -1
     };
 
     boundedHandlers = {
@@ -107,13 +99,8 @@ export class PlaybackController {
         }
     }
 
-    setRelativeTrackPositions(trackPositions) {
-        this.relativeTrackPositions.previous = trackPositions.previous;
-        this.relativeTrackPositions.next = trackPositions.next;
-    }
-
-    getRelativeTrackPositions() {
-        return this.relativeTrackPositions;
+    getCurrentTrackPosition() {
+        return this.currentTrackPosition;
     }
 
     seekTo(time) {
@@ -164,15 +151,13 @@ export class PlaybackController {
             });
         } else {
             //NOTE: Only set the playlist styling when the playlist differs from the current playlist
-            if (this.relativeTrackPositions.current.playlistIndex !== trackPosition.playlistIndex) {
+            if (this.currentTrackPosition.playlistIndex !== trackPosition.playlistIndex) {
                 //Update UI
                 NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
             }
 
             //CASE: RemotePlay is disabled
-            this.relativeTrackPositions.previous = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(trackPosition, "previous");
-            this.relativeTrackPositions.current = trackPosition;
-            this.relativeTrackPositions.next = this.cardInterface.getController("musicSource").queryRelativeTrackPosition(trackPosition, "next");
+            this.currentTrackPosition = trackPosition;
             
             const track = this.cardInterface.getController("musicSource").getTrackAt(trackPosition);
             
@@ -234,12 +219,7 @@ export class PlaybackController {
                 direction: direction
             });
         } else {
-            if (direction === "next") {
-                this.loadTrack(this.relativeTrackPositions.next, true);
-            } else if (direction === "previous") {
-                this.loadTrack(this.relativeTrackPositions.previous, true);
-            }
-    
+            this.loadTrack(this.cardInterface.getController("musicSource").queryRelativeTrackPosition(this.currentTrackPosition, direction), true);
             navigator.vibrate(100);
         }
     }

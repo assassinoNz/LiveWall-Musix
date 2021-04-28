@@ -20,10 +20,6 @@
         --secondaryColor: rgb(100, 100, 100);
         --tertiaryColor: rgb(20, 20, 20);
     }
-
-    #playlistExplorerViewport {
-        background-image: url("/musix/images/musix/background_playlistEditor.jpg");
-    }
 }
 
 @media (prefers-color-scheme: light) {
@@ -94,6 +90,7 @@ body {
     font-weight: bold;
     font-size: 130%;
     text-align: left;
+    color: black;
 
     border: none;
     outline: none;

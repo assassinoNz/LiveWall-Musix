@@ -276,6 +276,12 @@
 }
 
 @media (orientation: landscape) {
+    @media (prefers-color-scheme: dark) {
+        #playlistExplorerViewport {
+            background-image: url("/musix/images/musix/background_playlistExplorer.jpg");
+        }
+    }
+    
     #controlsContainer {
         left: auto;
     }

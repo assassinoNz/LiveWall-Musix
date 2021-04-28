@@ -123,10 +123,12 @@
     transform: rotate(196.5deg);
 }
 
-.playTimeDisplay {
+#playTimeDisplayContainer {
     position: absolute;
     left: 15px;
+}
 
+#playTimeDisplayContainer > p {
     font-family: "Digital";
     color: var(--themeColor);
 }
@@ -141,7 +143,7 @@
     transform: rotate(70.5deg);
 }
 
-#displayContainer {
+#trackDataDisplayContainer {
     position: absolute;
     bottom: 55vh;
     right: -160px;
@@ -149,23 +151,6 @@
     width: 60vh;
 
     transform: rotate(-90deg);
-}
-
-#displayContainer > p {
-    text-align: left;
-}
-
-#playlistDisplay {
-    color: var(--themeColor);
-}
-
-#titleDisplay {
-    font-size: 200%;
-    color: var(--secondaryColor);
-}
-
-#artistDisplay {
-    color: var(--negativeColor);
 }
 
 #playlistExplorerViewport {
@@ -293,8 +278,12 @@
         width: 60vh;
     }
 
-    .playTimeDisplay {
+    #playTimeDisplayContainer {
         left: auto;
+    }
+
+    #playTimeDisplayContainer > p{
+        text-align: center;
     }
 
     #volumeSlider {
@@ -305,7 +294,7 @@
         width: 25vh;
     }
 
-    #displayContainer {
+    #trackDataDisplayContainer {
         position: absolute;
         bottom: auto;
         right: auto;
@@ -321,7 +310,7 @@
         transform: rotate(0deg);
     }
     
-    #displayContainer > p {
+    #trackDataDisplayContainer > * {
         text-align: right;
     }
 

@@ -43,7 +43,7 @@
     padding: 0px;
     overflow: hidden;
     font-family: "SourceSansPro";
-    font-size: 16px;
+    font-size: 20px;
     color: var(--negativeColor);
     cursor: default;
     user-select: none;
@@ -75,9 +75,16 @@ body {
 }
 
 .titleContainer > h1 {
-    width: 100%;
-
     font-size: 300%;
+    color: var(--themeColor);
+}
+
+.titleContainer > h2 {
+    font-size: 150%;
+    color: var(--secondaryColor);
+}
+
+.titleContainer > h3 {
     color: var(--themeColor);
 }
 
@@ -88,7 +95,6 @@ body {
     padding: 10px;
 
     font-weight: bold;
-    font-size: 130%;
     text-align: left;
     color: black;
 

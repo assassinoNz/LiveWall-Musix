@@ -9,7 +9,8 @@ export class NowPlayingController {
     static view = null;
     static seekSlider = null;
     static volumeSlider = null;
-    static playTimeDisplays = null;
+    static playTimeDisplayContainer = null;
+    static trackDataDisplayContainer = null;
     static controls = null;
 
     static init(cardInterface, viewport) {
@@ -18,7 +19,8 @@ export class NowPlayingController {
         NowPlayingController.view = viewport;
         NowPlayingController.seekSlider = NowPlayingController.view.querySelector("#seekSlider");
         NowPlayingController.volumeSlider = NowPlayingController.view.querySelector("#volumeSlider");
-        NowPlayingController.playTimeDisplays = NowPlayingController.view.querySelectorAll(".playTimeDisplay");
+        NowPlayingController.playTimeDisplayContainer = NowPlayingController.view.querySelector("#playTimeDisplayContainer");
+        NowPlayingController.trackDataDisplayContainer = NowPlayingController.view.querySelector("#trackDataDisplayContainer");
         NowPlayingController.controls = NowPlayingController.view.querySelectorAll("#controlsContainer>div>button");
 
         //Add onpointerdown to volumeSlider for changing volume
@@ -85,7 +87,7 @@ export class NowPlayingController {
     static updateViewSection(section, value) {
         switch (section) {
             case "volume": {
-                NowPlayingController.playTimeDisplays[2].textContent = Math.round(value[1] * 100).toString();
+                NowPlayingController.playTimeDisplayContainer.children[2].textContent = Math.round(value[1] * 100).toString();
                 Utility.setCircularSliderView(NowPlayingController.volumeSlider, value[0], value[1]);
                 break;
             }
@@ -93,7 +95,7 @@ export class NowPlayingController {
             case "playlist": {
                 //NOTE: Only set the playlist styling when the playlist differs from the current playlist
                 const playlist = this.cardInterface.getController("musicSource").getPlaylistAt(value);
-                NowPlayingController.view.querySelector("#playlistDisplay").innerHTML = playlist.name;
+                NowPlayingController.trackDataDisplayContainer.children[0].textContent = playlist.name;
                 document.styleSheets[0].cssRules[2].style.setProperty("--themeColor", playlist.themeColor);
 
                 //Update media session
@@ -105,8 +107,8 @@ export class NowPlayingController {
             }
 
             case "track": {
-                NowPlayingController.view.querySelector("#artistDisplay").textContent = value.artist;
-                NowPlayingController.view.querySelector("#titleDisplay").textContent = value.title;
+                NowPlayingController.trackDataDisplayContainer.children[1].textContent = value.title;
+                NowPlayingController.trackDataDisplayContainer.children[2].textContent = value.artist;
 
                 document.styleSheets[0].cssRules[3].cssRules[0].style.setProperty("--backgroundColor", Utility.getRandColor(25, 40));
 
@@ -130,8 +132,8 @@ export class NowPlayingController {
 
             case "time": {
                 Utility.setCircularSliderView(NowPlayingController.seekSlider, value[0], value[1]);
-                NowPlayingController.playTimeDisplays[0].textContent = value[2];
-                NowPlayingController.playTimeDisplays[1].textContent = value[3];
+                NowPlayingController.playTimeDisplayContainer.children[0].textContent = value[2];
+                NowPlayingController.playTimeDisplayContainer.children[1].textContent = value[3];
                 break;
             }
         }

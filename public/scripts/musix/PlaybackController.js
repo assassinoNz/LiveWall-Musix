@@ -80,15 +80,11 @@ export class PlaybackController {
         this.remotePlay = remotePlay;
 
         if (remotePlay) {
-            //CASE: Enable RemotePlay on this client
+            //CASE: Has to enable RemotePlay on this client
             //Disable RemotePlay on all other clients
             this.cardInterface.getWebSocket().emit("broadcast-event", {
                 eventName: "remote-disable"
             });
-        } else {
-            //CASE: Disable RemotePlay on this client
-            //Also disable RemoteOnly mode
-            this.setRemoteOnly(false);
         }
 
         //Update UI
@@ -108,16 +104,6 @@ export class PlaybackController {
         } else {
             //CASE: RemotePlay is disabled
             this.setRemotePlay(true);
-        }
-    }
-
-    toggleRemoteOnly() {
-        if (this.remoteOnly) {
-            //CASE: RemoteOnly is enabled
-            this.setRemoteOnly(false);
-        } else {
-            //CASE: RemoteOnly is disabled
-            this.setRemoteOnly(true);
         }
     }
 

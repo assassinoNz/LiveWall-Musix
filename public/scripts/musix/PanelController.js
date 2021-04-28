@@ -110,9 +110,9 @@ export class PanelController {
 
     static hide() {
         PanelController.view.querySelector(PanelController.view.dataset.lastPanelQuery).classList.replace("popIn", "popOut");
+        PanelController.view.classList.replace("popIn", "popOut");
 
-        setTimeout(() => {
-            PanelController.view.classList.replace("popIn", "popOut");
-        }, 250);
+        // setTimeout(() => {
+        // }, 250);
     }
 }

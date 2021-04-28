@@ -204,6 +204,19 @@
     z-index: 2;
 }
 
+@keyframes popInPanelContainer {
+    0% {
+        opacity: 0;
+    }
+}
+
+@keyframes popOutPanelContainer {
+    100% {
+        visibility: hidden;
+        opacity: 0;
+    }
+}
+
 #panelContainer {
     position: absolute;
     top: 0;
@@ -219,45 +232,28 @@
     background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
 
+    animation-duration: 0.3s;
+    animation-fill-mode: forwards;
+
     z-index: 3;
 }
 
 #panelContainer.popIn {
-    visibility: visible;
+    animation-name: popInPanelContainer;
 }
 
 #panelContainer.popOut {
-    visibility: hidden;
-}
-
-@keyframes popInPanel {
-    0% {
-        opacity: 0;
-    }
-}
-
-@keyframes popOutPanel {
-    100% {
-        opacity: 0;
-        visibility: hidden;
-    }
+    animation-name: popOutPanelContainer;
 }
 
 .panel {
     position: absolute;
 
     width: 80%;
-
-    animation-duration: 0.5s;
-    animation-fill-mode: forwards;
-}
-
-.panel.popIn {
-    animation-name: popInPanel;
 }
 
 .panel.popOut {
-    animation-name: popOutPanel;
+    display: none;
 }
 
 @media (orientation: landscape) {

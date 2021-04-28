@@ -59,10 +59,24 @@ export class PlaylistExplorerController {
             trackView.textContent = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."))
         }
 
+        trackView.addEventListener("dragstart", (event) => {
+            this.draggingTrackPosition = {
+                playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
+                trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
+            };
+        });
+        trackView.addEventListener("dragenter", (event) => {
+            trackView.classList.add("emphasize");
+        });
         trackView.addEventListener("dragover", (event) => {
             event.preventDefault();
         });
+        trackView.addEventListener("dragleave", (event) => {
+            trackView.classList.remove("emphasize");
+        });
         trackView.addEventListener("drop", (event) => {
+            trackView.classList.remove("emphasize");
+            
             const droppingTrackPosition = {
                 playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
                 trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
@@ -71,12 +85,6 @@ export class PlaylistExplorerController {
             this.moveTrackView(this.draggingTrackPosition, droppingTrackPosition);
 
             this.draggingTrackPosition = null;
-        });
-        trackView.addEventListener("dragstart", (event) => {
-            this.draggingTrackPosition = {
-                playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
-                trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
-            };
         });
 
         trackView.addEventListener("click", (event) => {

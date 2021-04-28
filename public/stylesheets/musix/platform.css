@@ -107,6 +107,10 @@ body {
     background-color: var(--secondaryColor);
 }
 
+.button.text.emphasize {
+    box-shadow: 0 -10px var(--negativeColor);
+}
+
 .button.glyph {
     height: 60px;
     width: 60px;

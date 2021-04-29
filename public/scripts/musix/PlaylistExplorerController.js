@@ -110,11 +110,6 @@ export class PlaylistExplorerController {
         return trackView;
     }
 
-    static appendPlaylistView(playlistIndex) {
-        const playlistView = PlaylistExplorerController.createPlaylistView(playlistIndex);
-        PlaylistExplorerController.view.appendChild(playlistView);
-    }
-
     static addMissingPlaylistViewForPlaylistAt(playlistIndex) {
         const missingPlaylistView = PlaylistExplorerController.createPlaylistView(playlistIndex);
 
@@ -150,16 +145,6 @@ export class PlaylistExplorerController {
         //NOTE: Track's index matches its trackView index inside playlistView
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
         playlistView.children[1].children[trackPosition.trackIndex].remove();
-    }
-
-    static moveTrackView(trackPosition, toTrackPosition) {
-        //NOTE: A trackView's position corresponds to its track position
-        const trackView = PlaylistExplorerController.view.children[trackPosition.playlistIndex].children[1].children[trackPosition.trackIndex];
-        const toTrackView = PlaylistExplorerController.view.children[toTrackPosition.playlistIndex].children[1].children[toTrackPosition.trackIndex];
-        toTrackView.parentElement.insertBefore(trackView, toTrackView);
-
-        //Update playlists
-        this.cardInterface.getController("musicSource").moveTrack(trackPosition, toTrackPosition);
     }
 
     static search(keyword) {

@@ -63,15 +63,6 @@ export class PanelController {
             }));
             PanelController.hide();
         });
-        //Add onclick to playNextButton for updating the nextRelativeTrack
-        PanelController.view.children[1].children[4].addEventListener("click", () => {
-            const relativeTrackPositions = PanelController.cardInterface.getController("playback").getRelativeTrackPositions();
-            relativeTrackPositions.next = {
-                trackIndex: parseInt(PanelController.view.children[1].dataset.trackIndex),
-                playlistIndex: parseInt(PanelController.view.children[1].dataset.playlistIndex),
-            };
-            PanelController.hide();
-        });
 
         //Add onkeypress to searchInput for displaying search results
         PanelController.view.children[2].children[1].addEventListener("keypress", (event) => {
@@ -111,8 +102,5 @@ export class PanelController {
     static hide() {
         PanelController.view.querySelector(PanelController.view.dataset.lastPanelQuery).classList.replace("popIn", "popOut");
         PanelController.view.classList.replace("popIn", "popOut");
-
-        // setTimeout(() => {
-        // }, 250);
     }
 }

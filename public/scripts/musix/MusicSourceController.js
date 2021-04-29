@@ -122,15 +122,26 @@ export class MusicSourceController {
         return this.quickPlaylistIndex;
     }
 
-    appendPlaylist(newPlaylist) {
-        const assignedPlaylistIndex = this.playlists.push(newPlaylist) - 1;
-        //Randomize themeColor
-        newPlaylist.themeColor = Utility.getRandColor(100, 255);
+    addPlaylistAt(playlistIndex, playlist, updateUI) {
+        this.playlists.splice(playlistIndex, 0, playlist);
 
-        //Update UI
-        PlaylistExplorerController.appendPlaylistView(assignedPlaylistIndex);
+        const currentTrackPosition = this.cardInterface.getController("playback").getCurrentTrackPosition();
+        if (playlistIndex <= currentTrackPosition.playlistIndex) {
+            //CASE: Added playlist was in the same position as currentPlaylistIndex or a position before it
+            //Increase the currentPlaylistIndex
+            currentTrackPosition.playlistIndex += 1;
+        }
 
-        return assignedPlaylistIndex;
+        if (playlistIndex <= this.quickPlaylistIndex) {
+            //CASE: Added playlist was in the same position as quickPlaylistIndex or a position before it
+            //Increase the quickPlaylistIndex
+            this.quickPlaylistIndex += 1;
+        }
+
+        if (updateUI) {
+            //Update UI
+            PlaylistExplorerController.addMissingPlaylistViewForPlaylistAt(playlistIndex);
+        }
     }
 
     addTrackAt(trackPosition, track, updateUI) {
@@ -140,7 +151,7 @@ export class MusicSourceController {
         if (trackPosition.playlistIndex === currentTrackPosition.playlistIndex && trackPosition.trackIndex <= currentTrackPosition.trackIndex) {
             //CASE: Added track and the currentTrack was in the same playlist and added track was added to currentTrackPosition or a position before it
             //Increase the currentTrackIndex
-            this.cardInterface.getController("playback").getCurrentTrackPosition().trackIndex += 1;
+            currentTrackPosition.trackIndex += 1;
         }
 
         if (updateUI) {
@@ -169,6 +180,14 @@ export class MusicSourceController {
             //CASE: Removed playlist was situated before the currentPlaylist
             //Decrease the currentPlaylistIndex by 1
             currentTrackPosition.playlistIndex -= 1;
+        }
+
+        if (playlistIndex === this.quickPlaylistIndex) {
+            //CASE: Removed playlist was the quickPlaylist
+            this.quickPlaylistIndex = null;
+        } else if (playlistIndex < this.quickPlaylistIndex) {
+            //CASE: Removed playlist was situated before the quickPlaylist
+            this.quickPlaylistIndex -= 1;
         }
 
         if (updateUI) {
@@ -298,25 +317,14 @@ export class MusicSourceController {
             //CASE: There is no quick playlist created
             //Create the quick playlist in the playlists[]
             const quickPlaylist = {
-                name: "Quick ColorBand",
+                name: "Jump Playlist",
                 themeColor: Utility.getRandColor(100, 255),
                 tracks: [
                     track
                 ]
             };
-            this.quickPlaylistIndex = this.appendPlaylist(quickPlaylist);
-            //Ask to begin playback of quickPlaylist
-            if (window.frameElement) {
-                window.parent.shellInterface.throwAlert("Got a question", "Do you want to start QuickPlaylist now?", "Tap YES if you want to start playback of the QuickPlaylist immediately. Otherwise tap on NO", null, "YES", "NO").then(() => {
-                    this.cardInterface.getController("playback").loadTrack({ playlistIndex: this.quickPlaylistIndex, trackIndex: 0 }, true);
-                }, () => {
-                    //Do nothing here
-                });
-            } else {
-                if (confirm("Do you want to start playback of QuickPlaylist now?")) {
-                    this.cardInterface.getController("playback").loadTrack({ playlistIndex: this.quickPlaylistIndex, trackIndex: 0 }, true);
-                };
-            }
+            this.addPlaylistAt(this.playlists.length, quickPlaylist, true);
+            this.quickPlaylistIndex = this.playlists.length - 1;
         }
     }
 

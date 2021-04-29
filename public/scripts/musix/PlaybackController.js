@@ -142,6 +142,8 @@ export class PlaybackController {
     }
 
     loadTrack(trackPosition, autoplay) {
+        const musicSourceController = this.cardInterface.getController("musicSource");
+
         if (this.remotePlay) {
             //CASE: RemotePlay is enabled
             this.cardInterface.getWebSocket().emit("broadcast-event", {
@@ -150,46 +152,49 @@ export class PlaybackController {
                 autoplay: autoplay
             });
         } else {
+            //CASE: RemotePlay is disabled
             //NOTE: Only set the playlist styling when the playlist differs from the current playlist
             if (this.currentTrackPosition.playlistIndex !== trackPosition.playlistIndex) {
                 //Update UI
                 NowPlayingController.updateViewSection("playlist", trackPosition.playlistIndex);
             }
 
-            //CASE: RemotePlay is disabled
-            this.currentTrackPosition = trackPosition;
-            
-            const track = this.cardInterface.getController("musicSource").getTrackAt(trackPosition);
-            
+            const track = musicSourceController.getTrackAt(trackPosition);
+
             //Update mediaController
-            this.cardInterface.getController("musicSource").determineTrackUrl(trackPosition).then((trackUrl) => {
+            musicSourceController.determineTrackUrl(trackPosition).then((trackUrl) => {
                 this.mediaController.autoplay = autoplay;
                 this.mediaController.src = trackUrl;
                 this.mediaController.currentTime = 0;
             });
-    
+
             //Calculate media metadata
             const mediaMetadata = {
                 title: track.title,
                 artist: track.artist,
-                album: this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name
+                album: musicSourceController.getPlaylistAt(trackPosition.playlistIndex).name
             };
-    
+
             if (track.artist) {
                 mediaMetadata.artist = track.artist;
             } else {
                 mediaMetadata.artist = "Unknown Artist";
             }
-    
+
             if (track.title) {
                 mediaMetadata.title = track.title;
             } else {
                 mediaMetadata.title = track.path.slice(track.path.lastIndexOf("/") + 1, track.path.lastIndexOf("."));
             }
-    
+
             //Update playback state
-            localStorage.setItem(this.cardInterface.getController("musicSource").getPlaylistAt(trackPosition.playlistIndex).name, trackPosition.trackIndex.toString());
-    
+            localStorage.setItem(musicSourceController.getPlaylistAt(trackPosition.playlistIndex).name, trackPosition.trackIndex.toString());
+
+            //NOTE: Do not update currentTrackPosition for tracks in the quickPlaylist
+            if (musicSourceController.getQuickPlaylistIndex() !== trackPosition.playlistIndex) {
+                this.currentTrackPosition = trackPosition;
+            }
+
             //Update UI
             NowPlayingController.updateViewSection("track", mediaMetadata);
             // NowPlayingController.updateViewSection("position", [this.mediaController.duration, this.mediaController.playbackRate, this.mediaController.currentTime]);
@@ -219,7 +224,17 @@ export class PlaybackController {
                 direction: direction
             });
         } else {
-            this.loadTrack(this.cardInterface.getController("musicSource").queryRelativeTrackPosition(this.currentTrackPosition, direction), true);
+            const musicSourceController = this.cardInterface.getController("musicSource");
+            if (musicSourceController.getQuickPlaylistIndex()) {
+                //CASE: There is a quickPlaylist
+                //Load its first track
+                this.loadTrack({ playlistIndex: musicSourceController.getQuickPlaylistIndex(), trackIndex: 0 }, true);
+                //Remove track
+                musicSourceController.removeTrackAt({ playlistIndex: musicSourceController.getQuickPlaylistIndex(), trackIndex: 0 }, true);
+            } else {
+                this.loadTrack(musicSourceController.queryRelativeTrackPosition(this.currentTrackPosition, direction), true);
+            }
+
             navigator.vibrate(100);
         }
     }

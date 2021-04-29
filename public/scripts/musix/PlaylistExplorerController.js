@@ -115,6 +115,18 @@ export class PlaylistExplorerController {
         PlaylistExplorerController.view.appendChild(playlistView);
     }
 
+    static addMissingPlaylistViewForPlaylistAt(playlistIndex) {
+        const missingPlaylistView = PlaylistExplorerController.createPlaylistView(playlistIndex);
+
+        if (playlistIndex === this.view.childElementCount) {
+            //CASE: playlistPosition is a new position right after the last playlist
+            this.view.appendChild(missingPlaylistView);
+        } else {
+            //CASE: playlistPosition is an existing position
+            this.view.insertBefore(missingPlaylistView, this.view.children[playlistIndex]);
+        }
+    }
+
     static addMissingTrackViewForTrackAt(trackPosition) {
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
         const missingTrackView = PlaylistExplorerController.createTrackView(trackPosition);

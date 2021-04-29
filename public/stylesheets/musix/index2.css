@@ -185,6 +185,7 @@
 
 .playlistView>.titleContainer>h1 {
     writing-mode: vertical-rl;
+    text-align: right;
     
     transform: rotate(180deg);
 }

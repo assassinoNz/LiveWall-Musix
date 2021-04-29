@@ -76,6 +76,7 @@ body {
 
 .titleContainer > h1 {
     font-size: 270%;
+    text-align: right;
     color: var(--themeColor);
 }
 

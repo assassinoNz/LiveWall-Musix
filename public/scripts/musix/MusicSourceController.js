@@ -332,7 +332,7 @@ export class MusicSourceController {
         if (this.quickPlaylistIndex) {
             //CASE: There is a quick playlist created
             //Remove it
-            this.playlists.splice(this.quickPlaylistIndex, 1);
+            this.removePlaylistAt(this.quickPlaylistIndex, true);
         }
 
         return fetch("/musix/playlists", {

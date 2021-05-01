@@ -77,14 +77,17 @@ export class PlaylistExplorerController {
         trackView.addEventListener("drop", (event) => {
             trackView.classList.remove("emphasize");
 
-            const removedTrack = this.cardInterface.getController("musicSource").removeTrackAt(this.draggingTrackPosition, true);
+            const removedTrack = this.cardInterface.getController("musicSource").removeTrackAt(this.draggingTrackPosition, false);
+            const draggingTrackView = this.view.children[this.draggingTrackPosition.playlistIndex].children[1].children[this.draggingTrackPosition.trackIndex];
 
             const droppingTrackPosition = {
                 playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
                 trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
             };
 
-            this.cardInterface.getController("musicSource").addTrackAt(droppingTrackPosition, removedTrack, true);
+            this.cardInterface.getController("musicSource").addTrackAt(droppingTrackPosition, removedTrack, false);
+            const droppingTrackView = this.view.children[droppingTrackPosition.playlistIndex].children[1].children[droppingTrackPosition.trackIndex];
+            this.view.children[droppingTrackPosition.playlistIndex].children[1].insertBefore(draggingTrackView, droppingTrackView);
 
             this.draggingTrackPosition = null;
         });

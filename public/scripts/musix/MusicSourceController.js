@@ -1,6 +1,7 @@
 //@ts-check
 import { NowPlayingController } from "./NowPlayingController.js";
 import { PlaylistExplorerController } from "./PlaylistExplorerController.js";
+import { PanelController } from "./PanelController.js";
 import { Utility } from "./Utility.js";
 
 export class MusicSourceController {
@@ -326,6 +327,35 @@ export class MusicSourceController {
             this.addPlaylistAt(this.playlists.length, quickPlaylist, true);
             this.quickPlaylistIndex = this.playlists.length - 1;
         }
+    }
+
+    search(keyword) {
+        keyword = keyword.toLowerCase();
+        const trackViewFragment = new DocumentFragment();
+
+        for (let i = 0; i < this.playlists.length; i++) {
+            if (i === this.quickPlaylistIndex) {
+                break;
+            } else {
+                for (let j = 0; j < this.playlists[i].tracks.length; j++) {
+                    if (this.playlists[i].tracks[j].title.toLowerCase().includes(keyword) || this.playlists[i].tracks[j].artist.toLowerCase().includes(keyword)) {
+                        //Create a trackView and clone it to drop all the event handlers
+                        const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: i, trackIndex: j }).cloneNode(true);
+                        trackView.draggable = "false";
+    
+                        trackView.addEventListener("click", (event) => {
+                            PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: i, trackIndex: j }, true);
+                        });
+    
+                        trackViewFragment.appendChild(trackView);
+                    }
+                }
+            }
+        }
+
+        const searchPanel = PanelController.view.querySelector("#searchPanel");
+        searchPanel.children[2].innerHTML = "";
+        searchPanel.children[2].appendChild(trackViewFragment);
     }
 
     exportPlaylists() {

@@ -75,26 +75,32 @@ export class PlaylistExplorerController {
             trackView.classList.remove("emphasize");
         });
         trackView.addEventListener("drop", (event) => {
+            const musicSourceController = this.cardInterface.getController("musicSource");
+
             trackView.classList.remove("emphasize");
 
-            const removedTrack = this.cardInterface.getController("musicSource").removeTrackAt(this.draggingTrackPosition, true);
+            //Cache the original track view color
+            const draggingPlaylistColor = musicSourceController.getPlaylistAt(this.draggingTrackPosition.playlistIndex).themeColor;
 
+            const removedTrack = musicSourceController.removeTrackAt(this.draggingTrackPosition, true);
             const droppingTrackPosition = {
                 playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
                 trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
             };
+            musicSourceController.addTrackAt(droppingTrackPosition, removedTrack, true);
 
-            this.cardInterface.getController("musicSource").addTrackAt(droppingTrackPosition, removedTrack, true);
+            //Re apply the original track view color
+            this.view.children[droppingTrackPosition.playlistIndex].children[1].children[droppingTrackPosition.trackIndex].style.backgroundColor = draggingPlaylistColor;
 
             this.draggingTrackPosition = null;
         });
 
         trackView.addEventListener("click", (event) => {
             //NOTE: A trackView's position corresponds to its track position
-            //Get the trackView's position within the playlistExplorer
-            const playlistIndex = Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement);
-            const trackIndex = Array.from(trackView.parentElement.children).indexOf(trackView);
-            PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: playlistIndex, trackIndex: trackIndex }, true);
+            PlaylistExplorerController.cardInterface.getController("playback").loadTrack({
+                playlistIndex: Array.from(trackView.parentElement.parentElement.parentElement.children).indexOf(trackView.parentElement.parentElement),
+                trackIndex: Array.from(trackView.parentElement.children).indexOf(trackView)
+            }, true);
         });
         trackView.addEventListener("contextmenu", (event) => {
             event.preventDefault();
@@ -145,31 +151,5 @@ export class PlaylistExplorerController {
         //NOTE: Track's index matches its trackView index inside playlistView
         const playlistView = PlaylistExplorerController.view.children[trackPosition.playlistIndex];
         playlistView.children[1].children[trackPosition.trackIndex].remove();
-    }
-
-    static search(keyword) {
-        keyword = keyword.toLowerCase();
-        const playlists = PlaylistExplorerController.cardInterface.getController("musicSource").getPlaylists();
-        const trackViewFragment = new DocumentFragment();
-
-        for (let i = 0; i < playlists.length; i++) {
-            for (let j = 0; j < playlists[i].tracks.length; j++) {
-                if (playlists[i].tracks[j].title.toLowerCase().includes(keyword) || playlists[i].tracks[j].artist.toLowerCase().includes(keyword)) {
-                    //Create a trackView and clone it to drop all the event handlers
-                    const trackView = PlaylistExplorerController.createTrackView({ playlistIndex: i, trackIndex: j }).cloneNode(true);
-                    trackView.draggable = "false";
-
-                    trackView.addEventListener("click", (event) => {
-                        PlaylistExplorerController.cardInterface.getController("playback").loadTrack({ playlistIndex: i, trackIndex: j }, true);
-                    });
-
-                    trackViewFragment.appendChild(trackView);
-                }
-            }
-        }
-
-        const searchPanel = PanelController.view.querySelector("#searchPanel");
-        searchPanel.children[2].innerHTML = "";
-        searchPanel.children[2].appendChild(trackViewFragment);
     }
 }

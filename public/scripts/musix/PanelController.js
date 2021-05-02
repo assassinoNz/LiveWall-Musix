@@ -68,7 +68,7 @@ export class PanelController {
         PanelController.view.children[2].children[1].addEventListener("keypress", (event) => {
             if (event.key === "Enter") {
                 event.target.blur();
-                PlaylistExplorerController.search(event.target.value);
+                PanelController.cardInterface.getController("musicSource").search(event.target.value);
             }
         });
         

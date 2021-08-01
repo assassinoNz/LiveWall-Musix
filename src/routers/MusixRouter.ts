@@ -18,7 +18,7 @@ musixRouter.use(express.static(__dirname + "/../../public"));
 //Set static directory for music files
 let MUSIC_DIR = null;
 if (process.platform === "android") {
-    MUSIC_DIR = "/storage/3ACD-101B/Music";
+    MUSIC_DIR = "/storage/B49E-19EE/Music";
 } else if (process.platform === "linux") {
     MUSIC_DIR = "/home/assassino/Music";
 } else if (process.platform === "win32") {
